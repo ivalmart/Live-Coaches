@@ -1,0 +1,1780 @@
+{
+  "Landing_Site": {
+    "Name": "Landing_Site",
+    "Region": 0,
+    "Memory_Address": 496120,
+    "Map_Pos": [23, 0],
+    "Extent": [9, 5]
+  },
+  "Gauntlet_Entrance": {
+    "Name": "Gauntlet_Entrance",
+    "Region": 0,
+    "Memory_Address": 496307,
+    "Map_Pos": [18, 2],
+    "Extent": [5, 1]
+  },
+  "Parlor": {
+    "Name": "Parlor",
+    "Region": 0,
+    "Memory_Address": 496381,
+    "Map_Pos": [18, 4],
+    "Extent": [5, 5]
+  },
+  "Crateria_Power_Bombs": {
+    "Name": "Crateria_Power_Bombs",
+    "Region": 0,
+    "Memory_Address": 496554,
+    "Map_Pos": [32, 1],
+    "Extent": [2, 1]
+  },
+  "Parlor_Save_Room": {
+    "Name": "Parlor_Save_Room",
+    "Region": 0,
+    "Memory_Address": 496597,
+    "Map_Pos": [18, 6],
+    "Extent": [1, 1]
+  },
+  "West_Ocean": {
+    "Name": "West_Ocean",
+    "Region": 0,
+    "Memory_Address": 496638,
+    "Map_Pos": [38, 0],
+    "Extent": [8, 6]
+  },
+  "Bowling_Path": {
+    "Name": "Bowling_Path",
+    "Region": 0,
+    "Memory_Address": 496737,
+    "Map_Pos": [41, 2],
+    "Extent": [2, 1]
+  },
+  "Crateria_Kihunters": {
+    "Name": "Crateria_Kihunters",
+    "Region": 0,
+    "Memory_Address": 496780,
+    "Map_Pos": [33, 4],
+    "Extent": [3, 3]
+  },
+  "Crateria_Maridia_Shaft": {
+    "Name": "Crateria_Maridia_Shaft",
+    "Region": 0,
+    "Memory_Address": 496844,
+    "Map_Pos": [52, 10],
+    "Extent": [1, 1]
+  },
+  "East_Ocean": {
+    "Name": "East_Ocean",
+    "Region": 0,
+    "Memory_Address": 496893,
+    "Map_Pos": [49, 0],
+    "Extent": [7, 6]
+  },
+  "Forgotten_Highway": {
+    "Name": "Forgotten_Highway",
+    "Region": 0,
+    "Memory_Address": 496978,
+    "Map_Pos": [56, 4],
+    "Extent": [1, 4]
+  },
+  "Crab_Maze": {
+    "Name": "Crab_Maze",
+    "Region": 0,
+    "Memory_Address": 497021,
+    "Map_Pos": [53, 8],
+    "Extent": [4, 2]
+  },
+  "Crateria_Power_Door": {
+    "Name": "Crateria_Power_Door",
+    "Region": 0,
+    "Memory_Address": 497064,
+    "Map_Pos": [52, 9],
+    "Extent": [1, 1]
+  },
+  "Crateria_Tube": {
+    "Name": "Crateria_Tube",
+    "Region": 0,
+    "Memory_Address": 497108,
+    "Map_Pos": [32, 4],
+    "Extent": [1, 1]
+  },
+  "Moat": {
+    "Name": "Moat",
+    "Region": 0,
+    "Memory_Address": 497151,
+    "Map_Pos": [36, 4],
+    "Extent": [2, 2]
+  },
+  "Caterpillar_Elevator": {
+    "Name": "Caterpillar_Elevator",
+    "Region": 0,
+    "Memory_Address": 497194,
+    "Map_Pos": [34, 7],
+    "Extent": [1, 1]
+  },
+  "Gauntlet": {
+    "Name": "Gauntlet",
+    "Region": 0,
+    "Memory_Address": 497243,
+    "Map_Pos": [12, 2],
+    "Extent": [6, 1]
+  },
+  "Ocean_Ship_Trans": {
+    "Name": "Ocean_Ship_Trans",
+    "Region": 0,
+    "Memory_Address": 497295,
+    "Map_Pos": [43, 2],
+    "Extent": [1, 1]
+  },
+  "Climb_Room": {
+    "Name": "Climb_Room",
+    "Region": 0,
+    "Memory_Address": 497338,
+    "Map_Pos": [18, 9],
+    "Extent": [3, 9]
+  },
+  "Old_Mother_Brain": {
+    "Name": "Old_Mother_Brain",
+    "Region": 0,
+    "Memory_Address": 497500,
+    "Map_Pos": [20, 17],
+    "Extent": [3, 2]
+  },
+  "Blue_Brinstar_Elevator": {
+    "Name": "Blue_Brinstar_Elevator",
+    "Region": 0,
+    "Memory_Address": 497589,
+    "Map_Pos": [23, 17],
+    "Extent": [1, 1]
+  },
+  "Bomb_Torizo": {
+    "Name": "Bomb_Torizo",
+    "Region": 0,
+    "Memory_Address": 497668,
+    "Map_Pos": [25, 6],
+    "Extent": [1, 1]
+  },
+  "BT_Flyway": {
+    "Name": "BT_Flyway",
+    "Region": 0,
+    "Memory_Address": 497785,
+    "Map_Pos": [22, 6],
+    "Extent": [3, 1]
+  },
+  "Map_Flyway": {
+    "Name": "Map_Flyway",
+    "Region": 0,
+    "Memory_Address": 497890,
+    "Map_Pos": [20, 7],
+    "Extent": [3, 1]
+  },
+  "Terminator_Room": {
+    "Name": "Terminator_Room",
+    "Region": 0,
+    "Memory_Address": 497933,
+    "Map_Pos": [12, 4],
+    "Extent": [6, 3]
+  },
+  "Brinstar_Elevator": {
+    "Name": "Brinstar_Elevator",
+    "Region": 0,
+    "Memory_Address": 497976,
+    "Map_Pos": [6, 8],
+    "Extent": [1, 1]
+  },
+  "Kago_Room": {
+    "Name": "Kago_Room",
+    "Region": 0,
+    "Memory_Address": 498025,
+    "Map_Pos": [7, 8],
+    "Extent": [4, 1]
+  },
+  "Crateria_Map": {
+    "Name": "Crateria_Map",
+    "Region": 0,
+    "Memory_Address": 498068,
+    "Map_Pos": [23, 7],
+    "Extent": [1, 1]
+  },
+  "Green_Pirates_Shaft": {
+    "Name": "Green_Pirates_Shaft",
+    "Region": 0,
+    "Memory_Address": 498109,
+    "Map_Pos": [11, 2],
+    "Extent": [1, 7]
+  },
+  "Crateria_Supers": {
+    "Name": "Crateria_Supers",
+    "Region": 0,
+    "Memory_Address": 498169,
+    "Map_Pos": [21, 9],
+    "Extent": [4, 8]
+  },
+  "Final_Missile_Bombway": {
+    "Name": "Final_Missile_Bombway",
+    "Region": 0,
+    "Memory_Address": 498244,
+    "Map_Pos": [17, 7],
+    "Extent": [2, 1]
+  },
+  "Final_Missile": {
+    "Name": "Final_Missile",
+    "Region": 0,
+    "Memory_Address": 498320,
+    "Map_Pos": [16, 7],
+    "Extent": [1, 1]
+  },
+  "Brinstar_Entrance": {
+    "Name": "Brinstar_Entrance",
+    "Region": 1,
+    "Memory_Address": 498393,
+    "Map_Pos": [9, 0],
+    "Extent": [4, 12]
+  },
+  "Spore_Spawn_Supers": {
+    "Name": "Spore_Spawn_Supers",
+    "Region": 1,
+    "Memory_Address": 498523,
+    "Map_Pos": [23, 1],
+    "Extent": [2, 9]
+  },
+  "Brinstar_Map_Entrance": {
+    "Name": "Brinstar_Map_Entrance",
+    "Region": 1,
+    "Memory_Address": 498589,
+    "Map_Pos": [6, 4],
+    "Extent": [3, 1]
+  },
+  "Early_Supers": {
+    "Name": "Early_Supers",
+    "Region": 1,
+    "Memory_Address": 498632,
+    "Map_Pos": [10, 3],
+    "Extent": [3, 2]
+  },
+  "Brinstar_Reserve": {
+    "Name": "Brinstar_Reserve",
+    "Region": 1,
+    "Memory_Address": 498695,
+    "Map_Pos": [13, 4],
+    "Extent": [2, 1]
+  },
+  "Brinstar_Map": {
+    "Name": "Brinstar_Map",
+    "Region": 1,
+    "Memory_Address": 498741,
+    "Map_Pos": [5, 4],
+    "Extent": [1, 1]
+  },
+  "Brinstar_Firefleas": {
+    "Name": "Brinstar_Firefleas",
+    "Region": 1,
+    "Memory_Address": 498782,
+    "Map_Pos": [6, 6],
+    "Extent": [3, 2]
+  },
+  "Brinstar_Missile_Refill": {
+    "Name": "Brinstar_Missile_Refill",
+    "Region": 1,
+    "Memory_Address": 498825,
+    "Map_Pos": [5, 7],
+    "Extent": [1, 1]
+  },
+  "Dachora_Room": {
+    "Name": "Dachora_Room",
+    "Region": 1,
+    "Memory_Address": 498867,
+    "Map_Pos": [10, 6],
+    "Extent": [7, 7]
+  },
+  "Big_Pink": {
+    "Name": "Big_Pink",
+    "Region": 1,
+    "Memory_Address": 498969,
+    "Map_Pos": [15, 4],
+    "Extent": [5, 10]
+  },
+  "PreSpore_Kihunters": {
+    "Name": "PreSpore_Kihunters",
+    "Region": 1,
+    "Memory_Address": 499100,
+    "Map_Pos": [19, 4],
+    "Extent": [4, 1]
+  },
+  "Spore_Spawn": {
+    "Name": "Spore_Spawn",
+    "Region": 1,
+    "Memory_Address": 499143,
+    "Map_Pos": [22, 1],
+    "Extent": [1, 3]
+  },
+  "Pink_Power_Bombs": {
+    "Name": "Pink_Power_Bombs",
+    "Region": 1,
+    "Memory_Address": 499217,
+    "Map_Pos": [15, 7],
+    "Extent": [2, 2]
+  },
+  "Green_Hill_Zone": {
+    "Name": "Green_Hill_Zone",
+    "Region": 1,
+    "Memory_Address": 499282,
+    "Map_Pos": [19, 10],
+    "Extent": [8, 4]
+  },
+  "Morph_Ball_Room": {
+    "Name": "Morph_Ball_Room",
+    "Region": 1,
+    "Memory_Address": 499359,
+    "Map_Pos": [21, 8],
+    "Extent": [8, 3]
+  },
+  "Construction_Zone": {
+    "Name": "Construction_Zone",
+    "Region": 1,
+    "Memory_Address": 499473,
+    "Map_Pos": [29, 10],
+    "Extent": [1, 2]
+  },
+  "Blue_Brinstar_Energy": {
+    "Name": "Blue_Brinstar_Energy",
+    "Region": 1,
+    "Memory_Address": 499556,
+    "Map_Pos": [30, 8],
+    "Extent": [3, 3]
+  },
+  "Noob_Bridge": {
+    "Name": "Noob_Bridge",
+    "Region": 1,
+    "Memory_Address": 499642,
+    "Map_Pos": [27, 13],
+    "Extent": [6, 1]
+  },
+  "Green_Brinstar_Beetoms": {
+    "Name": "Green_Brinstar_Beetoms",
+    "Region": 1,
+    "Memory_Address": 499685,
+    "Map_Pos": [8, 10],
+    "Extent": [1, 1]
+  },
+  "Green_Brinstar_Energy": {
+    "Name": "Green_Brinstar_Energy",
+    "Region": 1,
+    "Memory_Address": 499729,
+    "Map_Pos": [6, 10],
+    "Extent": [5, 2]
+  },
+  "Etecoon_Supers": {
+    "Name": "Etecoon_Supers",
+    "Region": 1,
+    "Memory_Address": 499793,
+    "Map_Pos": [5, 10],
+    "Extent": [1, 1]
+  },
+  "Brinstar_Refill": {
+    "Name": "Brinstar_Refill",
+    "Region": 1,
+    "Memory_Address": 499835,
+    "Map_Pos": [9, 12],
+    "Extent": [1, 1]
+  },
+  "Spore_Spawn_Farm": {
+    "Name": "Spore_Spawn_Farm",
+    "Region": 1,
+    "Memory_Address": 499876,
+    "Map_Pos": [20, 9],
+    "Extent": [3, 1]
+  },
+  "Waterway_Energy": {
+    "Name": "Waterway_Energy",
+    "Region": 1,
+    "Memory_Address": 499922,
+    "Map_Pos": [8, 13],
+    "Extent": [7, 1]
+  },
+  "First_Missile": {
+    "Name": "First_Missile",
+    "Region": 1,
+    "Memory_Address": 499975,
+    "Map_Pos": [28, 11],
+    "Extent": [1, 1]
+  },
+  "Pink_Hoppers": {
+    "Name": "Pink_Hoppers",
+    "Region": 1,
+    "Memory_Address": 500016,
+    "Map_Pos": [19, 7],
+    "Extent": [2, 2]
+  },
+  "Hopper_Energy": {
+    "Name": "Hopper_Energy",
+    "Region": 1,
+    "Memory_Address": 500059,
+    "Map_Pos": [21, 8],
+    "Extent": [1, 1]
+  },
+  "Pink_Save": {
+    "Name": "Pink_Save",
+    "Region": 1,
+    "Memory_Address": 500100,
+    "Map_Pos": [15, 4],
+    "Extent": [1, 1]
+  },
+  "Blue_Brinstar_Boulders": {
+    "Name": "Blue_Brinstar_Boulders",
+    "Region": 1,
+    "Memory_Address": 500141,
+    "Map_Pos": [30, 8],
+    "Extent": [2, 1]
+  },
+  "Billy_Mays": {
+    "Name": "Billy_Mays",
+    "Region": 1,
+    "Memory_Address": 500184,
+    "Map_Pos": [29, 8],
+    "Extent": [1, 1]
+  },
+  "Green_Entrance_Save": {
+    "Name": "Green_Entrance_Save",
+    "Region": 1,
+    "Memory_Address": 500225,
+    "Map_Pos": [8, 5],
+    "Extent": [1, 1]
+  },
+  "Green_Beetom_Save": {
+    "Name": "Green_Beetom_Save",
+    "Region": 1,
+    "Memory_Address": 500266,
+    "Map_Pos": [5, 11],
+    "Extent": [1, 1]
+  },
+  "Red_Tower": {
+    "Name": "Red_Tower",
+    "Region": 1,
+    "Memory_Address": 500307,
+    "Map_Pos": [33, 9],
+    "Extent": [1, 10]
+  },
+  "Red_Brinstar_Firefleas": {
+    "Name": "Red_Brinstar_Firefleas",
+    "Region": 1,
+    "Memory_Address": 500371,
+    "Map_Pos": [25, 15],
+    "Extent": [8, 2]
+  },
+  "XRay": {
+    "Name": "XRay",
+    "Region": 1,
+    "Memory_Address": 500430,
+    "Map_Pos": [23, 15],
+    "Extent": [2, 1]
+  },
+  "Hellway": {
+    "Name": "Hellway",
+    "Region": 1,
+    "Memory_Address": 500471,
+    "Map_Pos": [34, 9],
+    "Extent": [3, 1]
+  },
+  "Caterpillar_Room": {
+    "Name": "Caterpillar_Room",
+    "Region": 1,
+    "Memory_Address": 500514,
+    "Map_Pos": [37, 4],
+    "Extent": [3, 8]
+  },
+  "Beta_Power_Bombs": {
+    "Name": "Beta_Power_Bombs",
+    "Region": 1,
+    "Memory_Address": 500604,
+    "Map_Pos": [35, 7],
+    "Extent": [2, 2]
+  },
+  "Alpha_Power_Bombs": {
+    "Name": "Alpha_Power_Bombs",
+    "Region": 1,
+    "Memory_Address": 500654,
+    "Map_Pos": [34, 11],
+    "Extent": [3, 1]
+  },
+  "Bat_Room": {
+    "Name": "Bat_Room",
+    "Region": 1,
+    "Memory_Address": 500701,
+    "Map_Pos": [34, 18],
+    "Extent": [2, 1]
+  },
+  "Spazer_Troll": {
+    "Name": "Spazer_Troll",
+    "Region": 1,
+    "Memory_Address": 500744,
+    "Map_Pos": [36, 17],
+    "Extent": [2, 2]
+  },
+  "Spazer": {
+    "Name": "Spazer",
+    "Region": 1,
+    "Memory_Address": 500807,
+    "Map_Pos": [38, 17],
+    "Extent": [1, 1]
+  },
+  "Warehouse_Zeelas": {
+    "Name": "Warehouse_Zeelas",
+    "Region": 1,
+    "Memory_Address": 500849,
+    "Map_Pos": [44, 18],
+    "Extent": [2, 2]
+  },
+  "Warehouse_Energy": {
+    "Name": "Warehouse_Energy",
+    "Region": 1,
+    "Memory_Address": 500913,
+    "Map_Pos": [43, 19],
+    "Extent": [1, 1]
+  },
+  "Warehouse_Kihunters": {
+    "Name": "Warehouse_Kihunters",
+    "Region": 1,
+    "Memory_Address": 500954,
+    "Map_Pos": [45, 18],
+    "Extent": [4, 2]
+  },
+  "Baby_Kraid": {
+    "Name": "Baby_Kraid",
+    "Region": 1,
+    "Memory_Address": 501025,
+    "Map_Pos": [47, 19],
+    "Extent": [6, 1]
+  },
+  "Kraid_Eye_Door": {
+    "Name": "Kraid_Eye_Door",
+    "Region": 1,
+    "Memory_Address": 501099,
+    "Map_Pos": [53, 18],
+    "Extent": [2, 2]
+  },
+  "Statue_Corridor": {
+    "Name": "Statue_Corridor",
+    "Region": 0,
+    "Memory_Address": 501229,
+    "Map_Pos": [12, 8],
+    "Extent": [5, 1]
+  },
+  "Red_Tower_Refill": {
+    "Name": "Red_Tower_Refill",
+    "Region": 1,
+    "Memory_Address": 501272,
+    "Map_Pos": [32, 18],
+    "Extent": [1, 1]
+  },
+  "Kraid_Refill": {
+    "Name": "Kraid_Refill",
+    "Region": 1,
+    "Memory_Address": 501313,
+    "Map_Pos": [54, 18],
+    "Extent": [1, 1]
+  },
+  "Statues": {
+    "Name": "Statues",
+    "Region": 0,
+    "Memory_Address": 501354,
+    "Map_Pos": [17, 8],
+    "Extent": [1, 2]
+  },
+  "Warehouse_Entrance": {
+    "Name": "Warehouse_Entrance",
+    "Region": 1,
+    "Memory_Address": 501409,
+    "Map_Pos": [41, 18],
+    "Extent": [3, 2]
+  },
+  "Varia_Suit": {
+    "Name": "Varia_Suit",
+    "Region": 1,
+    "Memory_Address": 501474,
+    "Map_Pos": [57, 19],
+    "Extent": [1, 1]
+  },
+  "Kraid_Save": {
+    "Name": "Kraid_Save",
+    "Region": 1,
+    "Memory_Address": 501515,
+    "Map_Pos": [49, 18],
+    "Extent": [1, 1]
+  },
+  "Caterpillar_Save": {
+    "Name": "Caterpillar_Save",
+    "Region": 1,
+    "Memory_Address": 501556,
+    "Map_Pos": [38, 8],
+    "Extent": [1, 1]
+  },
+  "Ice_Beam_Acid": {
+    "Name": "Ice_Beam_Acid",
+    "Region": 2,
+    "Memory_Address": 501597,
+    "Map_Pos": [4, 3],
+    "Extent": [2, 1]
+  },
+  "Cathedral": {
+    "Name": "Cathedral",
+    "Region": 2,
+    "Memory_Address": 501640,
+    "Map_Pos": [14, 3],
+    "Extent": [3, 2]
+  },
+  "Cathedral_Entrance": {
+    "Name": "Cathedral_Entrance",
+    "Region": 2,
+    "Memory_Address": 501683,
+    "Map_Pos": [11, 3],
+    "Extent": [3, 2]
+  },
+  "Business_Center": {
+    "Name": "Business_Center",
+    "Region": 2,
+    "Memory_Address": 501726,
+    "Map_Pos": [10, 0],
+    "Extent": [1, 7]
+  },
+  "Ice_Beam_Gate": {
+    "Name": "Ice_Beam_Gate",
+    "Region": 2,
+    "Memory_Address": 501781,
+    "Map_Pos": [3, 1],
+    "Extent": [7, 4]
+  },
+  "Ice_Beam_Tutorial": {
+    "Name": "Ice_Beam_Tutorial",
+    "Region": 2,
+    "Memory_Address": 501861,
+    "Map_Pos": [4, 1],
+    "Extent": [2, 1]
+  },
+  "Ice_Beam": {
+    "Name": "Ice_Beam",
+    "Region": 2,
+    "Memory_Address": 501904,
+    "Map_Pos": [5, 2],
+    "Extent": [1, 1]
+  },
+  "Ice_Beam_Snakes": {
+    "Name": "Ice_Beam_Snakes",
+    "Region": 2,
+    "Memory_Address": 501945,
+    "Map_Pos": [3, 1],
+    "Extent": [2, 3]
+  },
+  "Crumble_Shaft": {
+    "Name": "Crumble_Shaft",
+    "Region": 2,
+    "Memory_Address": 502008,
+    "Map_Pos": [2, 4],
+    "Extent": [1, 4]
+  },
+  "Crocomire_Speedway": {
+    "Name": "Crocomire_Speedway",
+    "Region": 2,
+    "Memory_Address": 502051,
+    "Map_Pos": [3, 7],
+    "Extent": [13, 3]
+  },
+  "Crocomire": {
+    "Name": "Crocomire",
+    "Region": 2,
+    "Memory_Address": 502157,
+    "Map_Pos": [12, 10],
+    "Extent": [8, 1]
+  },
+  "Hi_Jump": {
+    "Name": "Hi_Jump",
+    "Region": 2,
+    "Memory_Address": 502245,
+    "Map_Pos": [7, 6],
+    "Extent": [1, 1]
+  },
+  "Crocomire_Escape": {
+    "Name": "Crocomire_Escape",
+    "Region": 2,
+    "Memory_Address": 502286,
+    "Map_Pos": [11, 6],
+    "Extent": [4, 2]
+  },
+  "Hi_Jump_Energy": {
+    "Name": "Hi_Jump_Energy",
+    "Region": 2,
+    "Memory_Address": 502337,
+    "Map_Pos": [8, 5],
+    "Extent": [2, 2]
+  },
+  "Crocomire_Farm": {
+    "Name": "Crocomire_Farm",
+    "Region": 2,
+    "Memory_Address": 502402,
+    "Map_Pos": [10, 10],
+    "Extent": [2, 2]
+  },
+  "PostCroc_Save": {
+    "Name": "PostCroc_Save",
+    "Region": 2,
+    "Memory_Address": 502453,
+    "Map_Pos": [12, 11],
+    "Extent": [1, 1]
+  },
+  "PostCroc_Power_Bombs": {
+    "Name": "PostCroc_Power_Bombs",
+    "Region": 2,
+    "Memory_Address": 502494,
+    "Map_Pos": [9, 10],
+    "Extent": [1, 1]
+  },
+  "PostCroc_Shaft": {
+    "Name": "PostCroc_Shaft",
+    "Region": 2,
+    "Memory_Address": 502535,
+    "Map_Pos": [10, 12],
+    "Extent": [1, 5]
+  },
+  "Cosine_Room": {
+    "Name": "Cosine_Room",
+    "Region": 2,
+    "Memory_Address": 502587,
+    "Map_Pos": [11, 15],
+    "Extent": [4, 1]
+  },
+  "Grapple_Hardest": {
+    "Name": "Grapple_Hardest",
+    "Region": 2,
+    "Memory_Address": 502628,
+    "Map_Pos": [7, 12],
+    "Extent": [3, 2]
+  },
+  "Grapple_Yump": {
+    "Name": "Grapple_Yump",
+    "Region": 2,
+    "Memory_Address": 502671,
+    "Map_Pos": [4, 15],
+    "Extent": [8, 3]
+  },
+  "Grapple_Harder": {
+    "Name": "Grapple_Harder",
+    "Region": 2,
+    "Memory_Address": 502738,
+    "Map_Pos": [6, 12],
+    "Extent": [1, 3]
+  },
+  "Grapple_Hard": {
+    "Name": "Grapple_Hard",
+    "Region": 2,
+    "Memory_Address": 502784,
+    "Map_Pos": [4, 14],
+    "Extent": [2, 1]
+  },
+  "Grapple": {
+    "Name": "Grapple",
+    "Region": 2,
+    "Memory_Address": 502827,
+    "Map_Pos": [3, 14],
+    "Extent": [1, 4]
+  },
+  "Bubble_Reserve": {
+    "Name": "Bubble_Reserve",
+    "Region": 2,
+    "Memory_Address": 502874,
+    "Map_Pos": [18, 2],
+    "Extent": [2, 1]
+  },
+  "Bubble_Missiles": {
+    "Name": "Bubble_Missiles",
+    "Region": 2,
+    "Memory_Address": 502915,
+    "Map_Pos": [20, 2],
+    "Extent": [2, 1]
+  },
+  "Bubble_Mountain": {
+    "Name": "Bubble_Mountain",
+    "Region": 2,
+    "Memory_Address": 502963,
+    "Map_Pos": [22, 2],
+    "Extent": [2, 4]
+  },
+  "Go_Fast": {
+    "Name": "Go_Fast",
+    "Region": 2,
+    "Memory_Address": 503024,
+    "Map_Pos": [25, 1],
+    "Extent": [12, 2]
+  },
+  "Speed_Booster": {
+    "Name": "Speed_Booster",
+    "Region": 2,
+    "Memory_Address": 503067,
+    "Map_Pos": [37, 2],
+    "Extent": [1, 1]
+  },
+  "Single_Chamber": {
+    "Name": "Single_Chamber",
+    "Region": 2,
+    "Memory_Address": 503134,
+    "Map_Pos": [24, 3],
+    "Extent": [6, 4]
+  },
+  "Double_Chamber": {
+    "Name": "Double_Chamber",
+    "Region": 2,
+    "Memory_Address": 503213,
+    "Map_Pos": [25, 4],
+    "Extent": [4, 2]
+  },
+  "Wave_Beam": {
+    "Name": "Wave_Beam",
+    "Region": 2,
+    "Memory_Address": 503262,
+    "Map_Pos": [29, 4],
+    "Extent": [1, 1]
+  },
+  "Spiky_Platforms": {
+    "Name": "Spiky_Platforms",
+    "Region": 2,
+    "Memory_Address": 503303,
+    "Map_Pos": [25, 6],
+    "Extent": [4, 1]
+  },
+  "Volcano_Room": {
+    "Name": "Volcano_Room",
+    "Region": 2,
+    "Memory_Address": 503346,
+    "Map_Pos": [27, 6],
+    "Extent": [3, 3]
+  },
+  "Kronic_Boost": {
+    "Name": "Kronic_Boost",
+    "Region": 2,
+    "Memory_Address": 503412,
+    "Map_Pos": [25, 8],
+    "Extent": [2, 3]
+  },
+  "Magdollite_Tunnel": {
+    "Name": "Magdollite_Tunnel",
+    "Region": 2,
+    "Memory_Address": 503476,
+    "Map_Pos": [23, 8],
+    "Extent": [3, 1]
+  },
+  "Purple_Shaft": {
+    "Name": "Purple_Shaft",
+    "Region": 2,
+    "Memory_Address": 503519,
+    "Map_Pos": [22, 6],
+    "Extent": [1, 3]
+  },
+  "Lava_Dive": {
+    "Name": "Lava_Dive",
+    "Region": 2,
+    "Memory_Address": 503572,
+    "Map_Pos": [22, 10],
+    "Extent": [4, 3]
+  },
+  "Lower_Elevator": {
+    "Name": "Lower_Elevator",
+    "Region": 2,
+    "Memory_Address": 503615,
+    "Map_Pos": [21, 10],
+    "Extent": [1, 1]
+  },
+  "Upper_Norfair_Farm": {
+    "Name": "Upper_Norfair_Farm",
+    "Region": 2,
+    "Memory_Address": 503666,
+    "Map_Pos": [20, 5],
+    "Extent": [2, 2]
+  },
+  "Rising_Tide": {
+    "Name": "Rising_Tide",
+    "Region": 2,
+    "Memory_Address": 503715,
+    "Map_Pos": [17, 4],
+    "Extent": [5, 1]
+  },
+  "Acid_Snakes": {
+    "Name": "Acid_Snakes",
+    "Region": 2,
+    "Memory_Address": 503758,
+    "Map_Pos": [16, 9],
+    "Extent": [4, 1]
+  },
+  "Spiky_Acid_Snakes": {
+    "Name": "Spiky_Acid_Snakes",
+    "Region": 2,
+    "Memory_Address": 503803,
+    "Map_Pos": [21, 9],
+    "Extent": [4, 1]
+  },
+  "Croc_Recharge": {
+    "Name": "Croc_Recharge",
+    "Region": 2,
+    "Memory_Address": 503846,
+    "Map_Pos": [20, 9],
+    "Extent": [1, 1]
+  },
+  "Purple_Farm": {
+    "Name": "Purple_Farm",
+    "Region": 2,
+    "Memory_Address": 503889,
+    "Map_Pos": [23, 7],
+    "Extent": [1, 1]
+  },
+  "Bat_Cave": {
+    "Name": "Bat_Cave",
+    "Region": 2,
+    "Memory_Address": 503930,
+    "Map_Pos": [24, 1],
+    "Extent": [1, 2]
+  },
+  "Norfair_Map": {
+    "Name": "Norfair_Map",
+    "Region": 2,
+    "Memory_Address": 503988,
+    "Map_Pos": [9, 4],
+    "Extent": [1, 1]
+  },
+  "Bubble_Save": {
+    "Name": "Bubble_Save",
+    "Region": 2,
+    "Memory_Address": 504029,
+    "Map_Pos": [21, 3],
+    "Extent": [1, 1]
+  },
+  "Frog_Speedway": {
+    "Name": "Frog_Speedway",
+    "Region": 2,
+    "Memory_Address": 504070,
+    "Map_Pos": [12, 5],
+    "Extent": [8, 1]
+  },
+  "Red_Pirates_Shaft": {
+    "Name": "Red_Pirates_Shaft",
+    "Region": 2,
+    "Memory_Address": 504121,
+    "Map_Pos": [19, 6],
+    "Extent": [1, 3]
+  },
+  "Business_Save": {
+    "Name": "Business_Save",
+    "Region": 2,
+    "Memory_Address": 504167,
+    "Map_Pos": [11, 5],
+    "Extent": [1, 1]
+  },
+  "Crocomire_Save": {
+    "Name": "Crocomire_Save",
+    "Region": 2,
+    "Memory_Address": 504210,
+    "Map_Pos": [16, 8],
+    "Extent": [1, 1]
+  },
+  "Lower_Elevator_Save": {
+    "Name": "Lower_Elevator_Save",
+    "Region": 2,
+    "Memory_Address": 504251,
+    "Map_Pos": [20, 10],
+    "Extent": [1, 1]
+  },
+  "Water_Closet": {
+    "Name": "Water_Closet",
+    "Region": 2,
+    "Memory_Address": 504293,
+    "Map_Pos": [15, 13],
+    "Extent": [3, 3]
+  },
+  "Main_Hall": {
+    "Name": "Main_Hall",
+    "Region": 2,
+    "Memory_Address": 504374,
+    "Map_Pos": [17, 11],
+    "Extent": [8, 3]
+  },
+  "Golden_Torizo": {
+    "Name": "Golden_Torizo",
+    "Region": 2,
+    "Memory_Address": 504451,
+    "Map_Pos": [18, 15],
+    "Extent": [2, 2]
+  },
+  "Fast_Rippers": {
+    "Name": "Fast_Rippers",
+    "Region": 2,
+    "Memory_Address": 504538,
+    "Map_Pos": [21, 14],
+    "Extent": [4, 1]
+  },
+  "Golden_Recharge": {
+    "Name": "Golden_Recharge",
+    "Region": 2,
+    "Memory_Address": 504581,
+    "Map_Pos": [21, 15],
+    "Extent": [1, 1]
+  },
+  "Ridley": {
+    "Name": "Ridley",
+    "Region": 2,
+    "Memory_Address": 504622,
+    "Map_Pos": [23, 16],
+    "Extent": [1, 2]
+  },
+  "Lower_Norfair_Farm": {
+    "Name": "Lower_Norfair_Farm",
+    "Region": 2,
+    "Memory_Address": 504698,
+    "Map_Pos": [24, 16],
+    "Extent": [3, 1]
+  },
+  "Fast_Pillars_Setup": {
+    "Name": "Fast_Pillars_Setup",
+    "Region": 2,
+    "Memory_Address": 504741,
+    "Map_Pos": [25, 12],
+    "Extent": [1, 3]
+  },
+  "Mickey_Mouse": {
+    "Name": "Mickey_Mouse",
+    "Region": 2,
+    "Memory_Address": 504842,
+    "Map_Pos": [26, 9],
+    "Extent": [4, 4]
+  },
+  "Pillars": {
+    "Name": "Pillars",
+    "Region": 2,
+    "Memory_Address": 504919,
+    "Map_Pos": [26, 14],
+    "Extent": [4, 1]
+  },
+  "Plowerhouse": {
+    "Name": "Plowerhouse",
+    "Region": 2,
+    "Memory_Address": 504962,
+    "Map_Pos": [27, 16],
+    "Extent": [3, 1]
+  },
+  "The_Worst_Room_in_the_Game": {
+    "Name": "The_Worst_Room_in_the_Game",
+    "Region": 2,
+    "Memory_Address": 505005,
+    "Map_Pos": [30, 9],
+    "Extent": [1, 6]
+  },
+  "Amphitheatre": {
+    "Name": "Amphitheatre",
+    "Region": 2,
+    "Memory_Address": 505061,
+    "Map_Pos": [31, 9],
+    "Extent": [4, 5]
+  },
+  "Hotarubi": {
+    "Name": "Hotarubi",
+    "Region": 2,
+    "Memory_Address": 505104,
+    "Map_Pos": [33, 5],
+    "Extent": [5, 2]
+  },
+  "Escape_Power_Bombs": {
+    "Name": "Escape_Power_Bombs",
+    "Region": 2,
+    "Memory_Address": 505178,
+    "Map_Pos": [37, 6],
+    "Extent": [1, 1]
+  },
+  "Red_Kihunter_Shaft": {
+    "Name": "Red_Kihunter_Shaft",
+    "Region": 2,
+    "Memory_Address": 505221,
+    "Map_Pos": [35, 9],
+    "Extent": [3, 5]
+  },
+  "Wasteland": {
+    "Name": "Wasteland",
+    "Region": 2,
+    "Memory_Address": 505301,
+    "Map_Pos": [32, 14],
+    "Extent": [6, 3]
+  },
+  "Metal_Pirates": {
+    "Name": "Metal_Pirates",
+    "Region": 2,
+    "Memory_Address": 505387,
+    "Map_Pos": [30, 16],
+    "Extent": [3, 1]
+  },
+  "Three_Musketeers": {
+    "Name": "Three_Musketeers",
+    "Region": 2,
+    "Memory_Address": 505430,
+    "Map_Pos": [29, 3],
+    "Extent": [4, 3]
+  },
+  "Ridley_Energy": {
+    "Name": "Ridley_Energy",
+    "Region": 2,
+    "Memory_Address": 505496,
+    "Map_Pos": [22, 17],
+    "Extent": [1, 1]
+  },
+  "Screw_Attack": {
+    "Name": "Screw_Attack",
+    "Region": 2,
+    "Memory_Address": 505537,
+    "Map_Pos": [20, 14],
+    "Extent": [1, 3]
+  },
+  "Lower_Firefleas": {
+    "Name": "Lower_Firefleas",
+    "Region": 2,
+    "Memory_Address": 505582,
+    "Map_Pos": [35, 6],
+    "Extent": [3, 6]
+  },
+  "Red_Kihunter_Save": {
+    "Name": "Red_Kihunter_Save",
+    "Region": 2,
+    "Memory_Address": 505665,
+    "Map_Pos": [36, 12],
+    "Extent": [1, 1]
+  },
+  "Bowling_Alley": {
+    "Name": "Bowling_Alley",
+    "Region": 3,
+    "Memory_Address": 510350,
+    "Map_Pos": [10, 11],
+    "Extent": [6, 3]
+  },
+  "Wrecked_Ship_Entrance": {
+    "Name": "Wrecked_Ship_Entrance",
+    "Region": 3,
+    "Memory_Address": 510472,
+    "Map_Pos": [12, 14],
+    "Extent": [4, 1]
+  },
+  "Attic": {
+    "Name": "Attic",
+    "Region": 3,
+    "Memory_Address": 510546,
+    "Map_Pos": [12, 10],
+    "Extent": [7, 1]
+  },
+  "Beep_Boop": {
+    "Name": "Beep_Boop",
+    "Region": 3,
+    "Memory_Address": 510638,
+    "Map_Pos": [19, 10],
+    "Extent": [3, 1]
+  },
+  "Wrecked_Ship_Main": {
+    "Name": "Wrecked_Ship_Main",
+    "Region": 3,
+    "Memory_Address": 510710,
+    "Map_Pos": [12, 11],
+    "Extent": [6, 8]
+  },
+  "Spiky_Room_of_Death": {
+    "Name": "Spiky_Room_of_Death",
+    "Region": 3,
+    "Memory_Address": 510859,
+    "Map_Pos": [19, 15],
+    "Extent": [2, 1]
+  },
+  "Electric_Room_of_Death": {
+    "Name": "Electric_Room_of_Death",
+    "Region": 3,
+    "Memory_Address": 510933,
+    "Map_Pos": [21, 13],
+    "Extent": [1, 3]
+  },
+  "Wrecked_Ship_Energy": {
+    "Name": "Wrecked_Ship_Energy",
+    "Region": 3,
+    "Memory_Address": 511015,
+    "Map_Pos": [18, 13],
+    "Extent": [3, 2]
+  },
+  "Basement": {
+    "Name": "Basement",
+    "Region": 3,
+    "Memory_Address": 511087,
+    "Map_Pos": [14, 19],
+    "Extent": [5, 1]
+  },
+  "Wrecked_Ship_Map": {
+    "Name": "Wrecked_Ship_Map",
+    "Region": 3,
+    "Memory_Address": 511179,
+    "Map_Pos": [13, 19],
+    "Extent": [1, 1]
+  },
+  "Phantoon": {
+    "Name": "Phantoon",
+    "Region": 3,
+    "Memory_Address": 511251,
+    "Map_Pos": [19, 19],
+    "Extent": [1, 1]
+  },
+  "Sponge_Bath": {
+    "Name": "Sponge_Bath",
+    "Region": 3,
+    "Memory_Address": 511324,
+    "Map_Pos": [17, 15],
+    "Extent": [2, 1]
+  },
+  "Wrecked_Ship_Supers": {
+    "Name": "Wrecked_Ship_Supers",
+    "Region": 3,
+    "Memory_Address": 511400,
+    "Map_Pos": [15, 17],
+    "Extent": [1, 1]
+  },
+  "Beep_Boop_Supers": {
+    "Name": "Beep_Boop_Supers",
+    "Region": 3,
+    "Memory_Address": 511473,
+    "Map_Pos": [18, 17],
+    "Extent": [4, 1]
+  },
+  "Gravity": {
+    "Name": "Gravity",
+    "Region": 3,
+    "Memory_Address": 511552,
+    "Map_Pos": [10, 13],
+    "Extent": [1, 1]
+  },
+  "Wrecked_Save": {
+    "Name": "Wrecked_Save",
+    "Region": 3,
+    "Memory_Address": 511626,
+    "Map_Pos": [17, 14],
+    "Extent": [1, 1]
+  },
+  "Glass_Tunnel_Save": {
+    "Name": "Glass_Tunnel_Save",
+    "Region": 4,
+    "Memory_Address": 511698,
+    "Map_Pos": [12, 19],
+    "Extent": [1, 1]
+  },
+  "Glass_Tunnel": {
+    "Name": "Glass_Tunnel",
+    "Region": 4,
+    "Memory_Address": 511739,
+    "Map_Pos": [11, 17],
+    "Extent": [1, 3]
+  },
+  "West_Tunnel": {
+    "Name": "West_Tunnel",
+    "Region": 4,
+    "Memory_Address": 511828,
+    "Map_Pos": [10, 18],
+    "Extent": [1, 1]
+  },
+  "East_Tunnel": {
+    "Name": "East_Tunnel",
+    "Region": 4,
+    "Memory_Address": 511872,
+    "Map_Pos": [12, 17],
+    "Extent": [4, 2]
+  },
+  "Main_Street": {
+    "Name": "Main_Street",
+    "Region": 4,
+    "Memory_Address": 511945,
+    "Map_Pos": [10, 9],
+    "Extent": [3, 8]
+  },
+  "Fish_Tank": {
+    "Name": "Fish_Tank",
+    "Region": 4,
+    "Memory_Address": 512023,
+    "Map_Pos": [13, 13],
+    "Extent": [4, 3]
+  },
+  "Mama_Turtle": {
+    "Name": "Mama_Turtle",
+    "Region": 4,
+    "Memory_Address": 512085,
+    "Map_Pos": [17, 12],
+    "Extent": [3, 4]
+  },
+  "Crab_Tunnel": {
+    "Name": "Crab_Tunnel",
+    "Region": 4,
+    "Memory_Address": 512138,
+    "Map_Pos": [12, 16],
+    "Extent": [4, 1]
+  },
+  "Mount_Everest": {
+    "Name": "Mount_Everest",
+    "Region": 4,
+    "Memory_Address": 512185,
+    "Map_Pos": [12, 9],
+    "Extent": [6, 4]
+  },
+  "McElligots_Pool": {
+    "Name": "McElligots_Pool",
+    "Region": 4,
+    "Memory_Address": 512260,
+    "Map_Pos": [12, 7],
+    "Extent": [3, 2]
+  },
+  "Watering_Hole": {
+    "Name": "Watering_Hole",
+    "Region": 4,
+    "Memory_Address": 512315,
+    "Map_Pos": [12, 4],
+    "Extent": [2, 3]
+  },
+  "Bug_Room": {
+    "Name": "Bug_Room",
+    "Region": 4,
+    "Memory_Address": 512365,
+    "Map_Pos": [14, 4],
+    "Extent": [4, 2]
+  },
+  "Crab_Shaft": {
+    "Name": "Crab_Shaft",
+    "Region": 4,
+    "Memory_Address": 512419,
+    "Map_Pos": [18, 7],
+    "Extent": [2, 4]
+  },
+  "Pseudo_Plasma_Spark": {
+    "Name": "Pseudo_Plasma_Spark",
+    "Region": 4,
+    "Memory_Address": 512477,
+    "Map_Pos": [18, 4],
+    "Extent": [4, 3]
+  },
+  "Crab_Hole": {
+    "Name": "Crab_Hole",
+    "Region": 4,
+    "Memory_Address": 512540,
+    "Map_Pos": [16, 16],
+    "Extent": [1, 2]
+  },
+  "Tiny_Crab": {
+    "Name": "Tiny_Crab",
+    "Region": 4,
+    "Memory_Address": 512594,
+    "Map_Pos": [17, 16],
+    "Extent": [1, 1]
+  },
+  "Plasma_Tutorial": {
+    "Name": "Plasma_Tutorial",
+    "Region": 4,
+    "Memory_Address": 512638,
+    "Map_Pos": [26, 0],
+    "Extent": [1, 1]
+  },
+  "Plasma": {
+    "Name": "Plasma",
+    "Region": 4,
+    "Memory_Address": 512682,
+    "Map_Pos": [27, 0],
+    "Extent": [2, 3]
+  },
+  "Thread_The_Needle": {
+    "Name": "Thread_The_Needle",
+    "Region": 4,
+    "Memory_Address": 512729,
+    "Map_Pos": [27, 5],
+    "Extent": [7, 1]
+  },
+  "Maridia_Elevator": {
+    "Name": "Maridia_Elevator",
+    "Region": 4,
+    "Memory_Address": 512779,
+    "Map_Pos": [34, 0],
+    "Extent": [1, 6]
+  },
+  "Plasma_Spark": {
+    "Name": "Plasma_Spark",
+    "Region": 4,
+    "Memory_Address": 512832,
+    "Map_Pos": [22, 2],
+    "Extent": [4, 6]
+  },
+  "Kassiuz": {
+    "Name": "Kassiuz",
+    "Region": 4,
+    "Memory_Address": 512903,
+    "Map_Pos": [25, 0],
+    "Extent": [1, 4]
+  },
+  "Maridia_Map": {
+    "Name": "Maridia_Map",
+    "Region": 4,
+    "Memory_Address": 512950,
+    "Map_Pos": [17, 17],
+    "Extent": [1, 1]
+  },
+  "Maridia_First_Save": {
+    "Name": "Maridia_First_Save",
+    "Region": 4,
+    "Memory_Address": 512991,
+    "Map_Pos": [35, 4],
+    "Extent": [1, 1]
+  },
+  "Zip_Tube": {
+    "Name": "Zip_Tube",
+    "Region": 4,
+    "Memory_Address": 513032,
+    "Map_Pos": [22, 5],
+    "Extent": [1, 10]
+  },
+  "Grabber_Hole": {
+    "Name": "Grabber_Hole",
+    "Region": 4,
+    "Memory_Address": 513075,
+    "Map_Pos": [26, 5],
+    "Extent": [1, 1]
+  },
+  "West_Sand_Hall": {
+    "Name": "West_Sand_Hall",
+    "Region": 4,
+    "Memory_Address": 513121,
+    "Map_Pos": [18, 16],
+    "Extent": [4, 1]
+  },
+  "Oasis": {
+    "Name": "Oasis",
+    "Region": 4,
+    "Memory_Address": 513166,
+    "Map_Pos": [22, 15],
+    "Extent": [1, 2]
+  },
+  "East_Sand_Hall": {
+    "Name": "East_Sand_Hall",
+    "Region": 4,
+    "Memory_Address": 513218,
+    "Map_Pos": [23, 16],
+    "Extent": [3, 1]
+  },
+  "West_Sand_Hole": {
+    "Name": "West_Sand_Hole",
+    "Region": 4,
+    "Memory_Address": 513263,
+    "Map_Pos": [20, 14],
+    "Extent": [2, 2]
+  },
+  "East_Sand_Hole": {
+    "Name": "East_Sand_Hole",
+    "Region": 4,
+    "Memory_Address": 513310,
+    "Map_Pos": [23, 14],
+    "Extent": [2, 2]
+  },
+  "West_Sand_Pit": {
+    "Name": "West_Sand_Pit",
+    "Region": 4,
+    "Memory_Address": 513357,
+    "Map_Pos": [21, 12],
+    "Extent": [1, 2]
+  },
+  "East_Sand_Pit": {
+    "Name": "East_Sand_Pit",
+    "Region": 4,
+    "Memory_Address": 513402,
+    "Map_Pos": [23, 12],
+    "Extent": [1, 2]
+  },
+  "Aqueduct": {
+    "Name": "Aqueduct",
+    "Region": 4,
+    "Memory_Address": 513447,
+    "Map_Pos": [20, 9],
+    "Extent": [6, 3]
+  },
+  "Butterfly_Room": {
+    "Name": "Butterfly_Room",
+    "Region": 4,
+    "Memory_Address": 513516,
+    "Map_Pos": [26, 7],
+    "Extent": [1, 1]
+  },
+  "Botwoon_Hallway": {
+    "Name": "Botwoon_Hallway",
+    "Region": 4,
+    "Memory_Address": 513559,
+    "Map_Pos": [20, 8],
+    "Extent": [4, 1]
+  },
+  "Pants": {
+    "Name": "Pants",
+    "Region": 4,
+    "Memory_Address": 513606,
+    "Map_Pos": [26, 13],
+    "Extent": [2, 4]
+  },
+  "Pants_Right": {
+    "Name": "Pants_Right",
+    "Region": 4,
+    "Memory_Address": 513690,
+    "Map_Pos": [27, 14],
+    "Extent": [1, 3]
+  },
+  "Spring_Ball": {
+    "Name": "Spring_Ball",
+    "Region": 4,
+    "Memory_Address": 513744,
+    "Map_Pos": [32, 15],
+    "Extent": [2, 2]
+  },
+  "Botwoon_Energy_Farm": {
+    "Name": "Botwoon_Energy_Farm",
+    "Region": 4,
+    "Memory_Address": 513789,
+    "Map_Pos": [26, 10],
+    "Extent": [4, 1]
+  },
+  "Colosseum": {
+    "Name": "Colosseum",
+    "Region": 4,
+    "Memory_Address": 513834,
+    "Map_Pos": [34, 6],
+    "Extent": [7, 2]
+  },
+  "Aqueduct_Save": {
+    "Name": "Aqueduct_Save",
+    "Region": 4,
+    "Memory_Address": 513893,
+    "Map_Pos": [19, 11],
+    "Extent": [1, 1]
+  },
+  "The_Precious_Room": {
+    "Name": "The_Precious_Room",
+    "Region": 4,
+    "Memory_Address": 513935,
+    "Map_Pos": [41, 7],
+    "Extent": [2, 3]
+  },
+  "Botwoon_Energy": {
+    "Name": "Botwoon_Energy",
+    "Region": 4,
+    "Memory_Address": 514020,
+    "Map_Pos": [26, 8],
+    "Extent": [7, 1]
+  },
+  "Draygon_Save": {
+    "Name": "Draygon_Save",
+    "Region": 4,
+    "Memory_Address": 514074,
+    "Map_Pos": [41, 6],
+    "Extent": [1, 1]
+  },
+  "Halfie_Refill": {
+    "Name": "Halfie_Refill",
+    "Region": 4,
+    "Memory_Address": 514117,
+    "Map_Pos": [38, 8],
+    "Extent": [1, 1]
+  },
+  "Butterfly_Sand_Pit": {
+    "Name": "Butterfly_Sand_Pit",
+    "Region": 4,
+    "Memory_Address": 514158,
+    "Map_Pos": [26, 6],
+    "Extent": [1, 1]
+  },
+  "Botwoon_Energy_Pit": {
+    "Name": "Botwoon_Energy_Pit",
+    "Region": 4,
+    "Memory_Address": 514200,
+    "Map_Pos": [28, 9],
+    "Extent": [2, 1]
+  },
+  "Shaktool": {
+    "Name": "Shaktool",
+    "Region": 4,
+    "Memory_Address": 514245,
+    "Map_Pos": [28, 15],
+    "Extent": [4, 1]
+  },
+  "Halfie_Climb": {
+    "Name": "Halfie_Climb",
+    "Region": 4,
+    "Memory_Address": 514323,
+    "Map_Pos": [33, 6],
+    "Extent": [5, 3]
+  },
+  "Botwoon": {
+    "Name": "Botwoon",
+    "Region": 4,
+    "Memory_Address": 514398,
+    "Map_Pos": [24, 8],
+    "Extent": [2, 1]
+  },
+  "Space_Jump": {
+    "Name": "Space_Jump",
+    "Region": 4,
+    "Memory_Address": 514474,
+    "Map_Pos": [38, 10],
+    "Extent": [1, 1]
+  },
+  "Draygon_Recharge": {
+    "Name": "Draygon_Recharge",
+    "Region": 4,
+    "Memory_Address": 514516,
+    "Map_Pos": [42, 6],
+    "Extent": [1, 1]
+  },
+  "Cactus_Hallway": {
+    "Name": "Cactus_Hallway",
+    "Region": 4,
+    "Memory_Address": 514558,
+    "Map_Pos": [27, 6],
+    "Extent": [1, 2]
+  },
+  "Cactus_Alley": {
+    "Name": "Cactus_Alley",
+    "Region": 4,
+    "Memory_Address": 514603,
+    "Map_Pos": [28, 6],
+    "Extent": [5, 2]
+  },
+  "Draygon": {
+    "Name": "Draygon",
+    "Region": 4,
+    "Memory_Address": 514656,
+    "Map_Pos": [39, 9],
+    "Extent": [2, 2]
+  },
+  "Tourian_Elevator": {
+    "Name": "Tourian_Elevator",
+    "Region": 5,
+    "Memory_Address": 514734,
+    "Map_Pos": [20, 9],
+    "Extent": [1, 4]
+  },
+  "Metroid_1": {
+    "Name": "Metroid_1",
+    "Region": 5,
+    "Memory_Address": 514785,
+    "Map_Pos": [14, 12],
+    "Extent": [6, 1]
+  },
+  "Metroid_2": {
+    "Name": "Metroid_2",
+    "Region": 5,
+    "Memory_Address": 514865,
+    "Map_Pos": [13, 12],
+    "Extent": [1, 2]
+  },
+  "Metroid_3": {
+    "Name": "Metroid_3",
+    "Region": 5,
+    "Memory_Address": 514941,
+    "Map_Pos": [14, 13],
+    "Extent": [6, 1]
+  },
+  "Metroid_4": {
+    "Name": "Metroid_4",
+    "Region": 5,
+    "Memory_Address": 515021,
+    "Map_Pos": [20, 13],
+    "Extent": [1, 2]
+  },
+  "Blue_Hoppers": {
+    "Name": "Blue_Hoppers",
+    "Region": 5,
+    "Memory_Address": 515097,
+    "Map_Pos": [19, 15],
+    "Extent": [2, 1]
+  },
+  "RIP_Torizo": {
+    "Name": "RIP_Torizo",
+    "Region": 5,
+    "Memory_Address": 515173,
+    "Map_Pos": [17, 15],
+    "Extent": [2, 1]
+  },
+  "Metroid_Skip": {
+    "Name": "Metroid_Skip",
+    "Region": 5,
+    "Memory_Address": 515249,
+    "Map_Pos": [13, 15],
+    "Extent": [4, 1]
+  },
+  "Seaweed_Room": {
+    "Name": "Seaweed_Room",
+    "Region": 5,
+    "Memory_Address": 515327,
+    "Map_Pos": [12, 15],
+    "Extent": [1, 2]
+  },
+  "Tourian_Refill": {
+    "Name": "Tourian_Refill",
+    "Region": 5,
+    "Memory_Address": 515374,
+    "Map_Pos": [11, 16],
+    "Extent": [1, 1]
+  },
+  "Mother_Brain": {
+    "Name": "Mother_Brain",
+    "Region": 5,
+    "Memory_Address": 515416,
+    "Map_Pos": [13, 18],
+    "Extent": [4, 1]
+  },
+  "Tourian_Eye_Door": {
+    "Name": "Tourian_Eye_Door",
+    "Region": 5,
+    "Memory_Address": 515524,
+    "Map_Pos": [13, 16],
+    "Extent": [4, 1]
+  },
+  "Rinka_Shaft": {
+    "Name": "Rinka_Shaft",
+    "Region": 5,
+    "Memory_Address": 515571,
+    "Map_Pos": [17, 16],
+    "Extent": [1, 3]
+  },
+  "Mother_Brain_Save": {
+    "Name": "Mother_Brain_Save",
+    "Region": 5,
+    "Memory_Address": 515619,
+    "Map_Pos": [16, 17],
+    "Extent": [1, 1]
+  },
+  "Escape_1": {
+    "Name": "Escape_1",
+    "Region": 5,
+    "Memory_Address": 515661,
+    "Map_Pos": [11, 18],
+    "Extent": [2, 1]
+  },
+  "Escape_2": {
+    "Name": "Escape_2",
+    "Region": 5,
+    "Memory_Address": 515706,
+    "Map_Pos": [11, 19],
+    "Extent": [1, 2]
+  },
+  "Escape_3": {
+    "Name": "Escape_3",
+    "Region": 5,
+    "Memory_Address": 515751,
+    "Map_Pos": [12, 19],
+    "Extent": [6, 2]
+  },
+  "Escape_4": {
+    "Name": "Escape_4",
+    "Region": 5,
+    "Memory_Address": 515806,
+    "Map_Pos": [18, 16],
+    "Extent": [3, 6]
+  },
+  "Tourian_Save": {
+    "Name": "Tourian_Save",
+    "Region": 5,
+    "Memory_Address": 515867,
+    "Map_Pos": [21, 12],
+    "Extent": [1, 1]
+  }
+}
