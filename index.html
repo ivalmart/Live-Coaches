@@ -6,17 +6,20 @@
         <title>Live Coach for Super Metroid</title>
     </head>
     <body>
+        <link rel="stylesheet" href="../style.css" />
         <main>
             <div style="max-width:900px;margin:24px auto;text-align:center;">
                 <h1>Live Coach / SNES Emulator</h1>
                 <p id="status">Loading emulator...</p>
-                <!-- <snes-emulator id="emulator" rom-url="assets/Super Metroid.sfc" rom-name="Super Metroid"></snes-emulator> -->
-                <snes-emulator id="emulator" rom-url="assets/Super Metroid.sfc" rom-name="Super Metroid"></snes-emulator>
+                <snes-emulator id="emulator" rom-url="../assets/Super Metroid.sfc" rom-name="Super Metroid"></snes-emulator>
+                <controller-mapping></controller-mapping>                
             </div>
         </main>
 
-        <!-- Only load the emulator module; keep init minimal and defensive -->
-        <script type="module" src="./snes-emulator.js"></script>
+        <!-- Imported Custom Tag Scripts -->
+        <script type="module" src="../tag-scripts/snes-emulator.js"></script>
+        <script type="module" src="../tag-scripts/controller-mapping.js"></script>
+        <!-- Main Script -->
         <script type="module">
             // Minimal initializer: wait for the custom element to be defined, then attach safe handlers.
             const statusEl = document.getElementById('status');

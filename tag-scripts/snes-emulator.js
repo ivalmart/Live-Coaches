@@ -20,7 +20,7 @@ class SnesEmulator extends HTMLElement {
         this.init();
     }
 
-    // unsure if this is needed?
+    // unsure if this is needed? if attributes change such as RomURL, results in an emulator crash
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'rom-url' || name === 'state-url') {
             this[name.replace('-', 'Url')] = newValue;
@@ -266,12 +266,7 @@ class SnesEmulator extends HTMLElement {
 
     render() {
         this.innerHTML = `
-        <style>
-            .emulator { background: #222; border-radius: 8px; padding: 1em; margin-bottom: 1em; }
-            canvas { background: #000; display: block; margin: 0 auto 1em auto; border-radius: 8px; }
-            button { background: #3a6; color: #fff; border: none; border-radius: 4px; padding: 0.5em 1em; cursor: pointer; margin-right: 0.5em; }
-            .missing { color: #f66; font-weight: bold; }
-        </style>
+        <link rel="stylesheet" href="../style.css" />
         <div class="emulator">
             <div id="emu-container">
             <canvas id="screen" width="256" height="224"></canvas>
@@ -281,7 +276,7 @@ class SnesEmulator extends HTMLElement {
             <button id="import">Import State</button>
             </div>
             <div style="margin-top:0.5em; color:#aaa; font-size:0.9em;">
-            ${!this.romUrl ? '<span class="missing">No ROM specified. Set rom-url attribute.</span>' : '(Click the game screen and use your keyboard to play. Emulator logic is now active!)'}
+            ${!this.romUrl ? '<span class="missing">No ROM specified. Set rom-url attribute.</span>' : '(Click on game screen to sync keyboard to play!)'}
             </div>
         </div>
         `;
