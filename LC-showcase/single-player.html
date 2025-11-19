@@ -102,8 +102,7 @@
       let itemsCollected;
 
       async function initGeminiChat() {
-        // const API_KEY = getApiKey();
-        const API_KEY = "AIzaSyDhgVAjcoK-zDfUwhOguz6-3QbQO5wnfDQ";
+        const API_KEY = getApiKey();
         ai = new GoogleGenAI({ apiKey: API_KEY });
       
         try {
@@ -603,7 +602,7 @@
         if (!wb) {
           return;
         }
-        
+
         wb.innerHTML = '';
         const text = (msg === undefined || msg === null) ? '' : String(msg).trim();
         if (!text) {

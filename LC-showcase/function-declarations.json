@@ -113,5 +113,19 @@
       },
       "required": ["nodeName"]
     }
+  },
+  {
+    "name": "set_whiteboard_content",
+    "description": "Place visual content into the whiteboard area. Content such as text, images, or a map should be embedded into the board area. Use this to show visual diagrams, screenshots, list of goals or a focused map view.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "msg": {
+          "type": "string",
+          "description": "Content to place on the whiteboard. Use 'map' or 'show map' to render a map centered on the player, a full https://... image URL to embed an image, or Markdown/HTML text to render formatted content."
+        }
+      },
+      "required": ["msg"]
+    }
   }
 ]

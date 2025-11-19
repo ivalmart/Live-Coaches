@@ -15,7 +15,14 @@ import { marked } from "https://esm.run/marked";
 export function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
   if (!apiKey) {
-    apiKey = prompt("Please enter your Gemini API key:");
+    let txt_apiKey = fetch("../api_key.txt");
+    
+    if(!txt_apiKey) {
+      apiKey = prompt("Please enter your Gemini API key:");
+    } else {
+      apiKey = txt_apiKey.text();
+    }
+
     if (apiKey) {
       localStorage.setItem("GEMINI_API_KEY", apiKey);
     }
