@@ -1,0 +1,42 @@
+Item bitflag. Values can be combined by adding them together
+Example./ to make an item give you both Hi-Jump Boots ($0100) and Spring Ball ($0002), you would add their values together, which would be $0100 + $0002 = $0102
+
+List of equipment & beam bitflags:
+Equipment Items:
+$0001 = Varia
+$0002 = Spring Ball
+$0004 = Morph Ball
+$0008 = Screw Attack
+$0010 = None
+$0020 = Gravity
+$0040 = --none--
+$0080 = --none--
+$0100 = Hi-Jump
+$0200 = Space Jump
+$0400 = --none--
+$0800 = --none--
+$1000 = Bomb
+$2000 = Speed Booster
+$4000 = Grapple Beam
+$8000 = X-Ray Scope
+
+Beam Items:
+$0001 = Wave
+$0002 = Ice
+$0004 = Spazer
+$0008 = Plasma
+$0010 = Charged beam
+$0020 = --none--
+$0040 = --none--
+$0080 = --none--
+$0100 = Missile / PB / Deadbeam
+$0200 = Super Missile / PB / Deadbeam
+$0400 = Dead Beam
+$0800 = Dead Missile/Super
+$1000 = Charge
+$2000 = --none--
+$4000 = --none--
+$8000 = Live beam
+$0500 = Bomb
+
+Check out sm_global.py file to see the different node suffix tags and associate the corret nodes to different doors and items/bosses. If the current node checked and placed on the map that is not an item tag within the sm_global format, assume it's a door transition and keep it blue.

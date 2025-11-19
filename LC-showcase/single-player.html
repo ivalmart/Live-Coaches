@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Display</title>
+    <link rel="stylesheet" href="../LC-showcase/game-style.css" />
+        <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <style>
+      .leaflet-image-layer {
+        image-rendering: pixelated;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Game Display</h1>
+      <div class="row">
+        <div class="column"> <!-- Game Screen Canvas + Export State Functionality -->
+          <div id="container"></div>
+          <button class="defaultButton" id="export_state">Export Current State</button>
+          <button class="defaultButton" id="toggleMap">Show Map</button>
+        </div>
+        <!-- Gemini + Player Chat Functionality -->
+        <div class="column"> 
+          <div class="instructions">
+            <div id="message_display"></div>
+            <input
+              type="text"
+              id="user-input"
+              size="60"
+              rows="5"
+              placeholder="Type your message to the Live Coach..."
+            /><br>
+            <button class="defaultButton" id="sendBusMessage">Send Message</button>
+            <button id="export_transcript">Export Transcript</button>
+            <button id="speechtotext" disabled>Hold SPACE BAR to Speak!</button>
+            <br><input type="checkbox" id="speak-response" name="speak-response">
+            <label for="speak-response">Speak response</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p hidden id="goal">Goal</p>
+    <div id="map" style="height: 500px; width: 750px; background: #444"></div>
+ 
+    <div id="whiteboard" style="height:500px; width:750px; background:#111; color:#eee; overflow:auto; padding:10px; margin-top:10px; border:1px solid #333;">
+      <div style="opacity:0.6; font-size:14px;"></div>
+    </div>
+    <a class="example" href="?Game=SuperMetroid" >Super Metroid</a>
+    <div id="gameDisplay">No game selected</div>
+    
+    <!-- Images for Controller Instructions on Keyboard -->
+    <button class="defaultButton" id="toggleControls">Show Controls</button>
+    <div id="button_input_handler" style="display: none;">
+      <div class="row">
+        <div class="column">
+          <b><u>Controls:</u></b><br />
+          <b>Up:</b>-W-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<b>A Button:</b>-P-&nbsp;|<b>X Button:</b>-O-<br />
+          <b>Left:</b>-A-&nbsp;&nbsp;&nbsp;&nbsp;|<b>B Button:</b>-L-&nbsp;|<b>Y Button:</b>-K-<br />
+          <b>Down:</b>-S-&nbsp;|<b>Start:</b>-Enter-&nbsp;|<b>Left Trigger:</b>-Q-<br />
+          <b>Right:</b>-D-&nbsp;|<b>Select:</b>-R Shift-&nbsp;|<b>Right Trigger:</b>-E-<br />
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      // ---------- Imports ----------
+      import { GoogleGenAI } from "https://esm.run/@google/genai";
+
+      import { emulateSnesConsole } from "../SNES9x-framework/snes.mjs"; // Super Nintendo emulator import
+      import { marked } from "https://esm.run/marked";
+      // Map information and tools Import
+      import all_rooms from "../SNES9x-framework/all_rooms.json" with { type: "json" };
+      import all_nodes from "../SNES9x-framework/all_nodes.json" with { type: "json" };
+      import { abstractify_pos_global, calculate_samus_pos, get_samus_room, map_area_names, map_area_offsets, crateria2_offset, crateria2_rooms } from "../SNES9x-framework/map_tools.mjs";
+      import {
+        getApiKey,  // gemini
+        displayMessage,  // gemini
+        getGameFromSearchParams,  // webpage
+        initEmulatorPage,  // webpage
+        initPlayerState,  // player state
+        item_flags  // item flags
+      } from "../LC-showcase/helper.js"; // helper file
+      import functionDeclarations from "../LC-showcase/function-declarations.json" with { "type": "json" }
+      
+      /* -------------------- Gemini Code -------------------- */
+      let ai;
+      let chat;
+      let messageHistory = [];
+      let instructions = "when you perform a function call, make sure you write text while calling that function";      
+      
+      let itemsCollected;
+
+      async function initGeminiChat() {
+        // const API_KEY = getApiKey();
+        const API_KEY = "AIzaSyDhgVAjcoK-zDfUwhOguz6-3QbQO5wnfDQ";
+        ai = new GoogleGenAI({ apiKey: API_KEY });
+      
+        try {
+          chat = ai.chats.create({
+            model: "gemini-2.5-flash",
+            config: {
+              systemInstruction: instructions,
+              tools: [{
+                functionDeclarations: functionDeclarations
+              }],
+            }
+          });
+
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+      
+      async function sendGeminiMessage(message) {
+        if (message) {
+          if(message.from == "Player" || message.from == "Coach") {
+            displayMessage(message.from, message.text, document.getElementById("message_display"), messageHistory); // Displays Player response on screen
+          }
+            
+          try {
+            let response = await chat.sendMessage({
+              message: `from=${message.from.toLowerCase()}\n` + message.text,
+            });
+            
+            if (!response.functionCalls) {
+              displayMessage("Coach", response.text, document.getElementById("message_display"), messageHistory);
+            } else {
+              while (response.functionCalls) {
+                const functionResponseParts = [];
+                for (let call of response.functionCalls) {
+                  // console.log("Running function call:", call); // {name: 'set_light_value', args: {brightness: 0.75}}
+
+                  if (knownFunctions[call.name]) {
+                    displayMessage("FunctionCall", call.name + " " + JSON.stringify(call.args), document.getElementById("message_display"), messageHistory);
+                    let result = undefined;
+                    try {
+                      result = await knownFunctions[call.name](call.args);
+                    } catch(error) {
+                      console.warn("Error executing function:", call.name, error);
+                      result = "Error: " + error.message; // Return error message if function fails
+                    }
+                     
+                    // console.log({result});
+                    displayMessage("FunctionResults", JSON.stringify(result), document.getElementById("message_display"), messageHistory);
+                    functionResponseParts.push({
+                      functionResponse: {
+                        name: call.name,
+                        response: {text: result},
+                      },
+                    });
+                  }
+                }
+
+                if (functionResponseParts) {
+                  response = await chat.sendMessage({
+                    message: functionResponseParts,
+                  });
+                  displayMessage("Coach", response.text, document.getElementById("message_display"), messageHistory);
+                  
+                }
+              }
+            }
+            
+          } catch (error) {
+            console.warn(error);
+          }
+        }
+      }
+      
+      /* -------------------- Super Nintendo Emulator Code -------------------- */
+      let dv;
+      let knownFunctions;
+      let isListening;
+      let recognition;
+      
+      const gameSelected = getGameFromSearchParams();
+      // let currentPlayerState = initPlayerState(gameSelected); // intial player state
+      let currentPlayerState = {};
+
+      // Player Object for Super Metroid Map
+      let player = {
+        x: 258, 
+        y: 562, // coordinates
+        marker: null, // pink circle indicator on map to show player
+        range: null, // white circle indicator to show player range
+        nodeList: [], // list of associated nodes within range
+        closestNode: "Landing_Site_Ship" // closest node to player
+      }; 
+
+      // Loading Function for SNES ROMs
+      async function loadBinary(url) {
+        let response = await fetch(url);
+        return new Uint8Array(await response.arrayBuffer());
+      }
+      
+      // Initialize setup
+      window.onload = async function () {
+        // displays the current game title on screen
+        const gameElement = document.getElementById("gameDisplay");
+        if (gameSelected) {
+          gameElement.innerHTML = `You are playing: <strong> ${gameSelected}</strong>`;
+        } else {
+          window.location.assign("?Game=SuperMetroid");
+        }     
+        
+        // Retrieving general prompt + appropriate game prompt
+        let generalPrompt = await fetch('../prompts/coach-prompt.md');
+        instructions = instructions.concat(await generalPrompt.text());
+        let gamePrompt = await fetch(`../prompts/${gameSelected}.md`);
+        instructions = instructions.concat(await gamePrompt.text());
+        
+        // Loading in appropriate Game ROM and Save State (if available)
+        let romBytes; // Loading in SNES Game ROM
+        let stateBytes; // Loading in SNES Game Saved State
+        let stateSlotBytes = new Array(5);
+
+        switch (gameSelected) {
+          case "EarthBound":
+            // Loading in EarthBound ROM
+            romBytes = await loadBinary(
+              "../assets/EarthBound.sfc"
+            );
+            // Loading in EarthBound Save State
+            stateBytes = await loadBinary(
+              "../assets/eb-outsideP1.state"
+            );
+            break;
+          case "Tetris2":
+            // Loading in Tetris ROM
+            romBytes = await loadBinary(
+              "../assets/Tetris 2 (USA) (Rev 1).sfc"
+            );
+            stateBytes = await loadBinary(
+              "../assets/Tetris2.state"
+            );
+            break;
+          default:
+            // Loading in Super Metroid ROM
+            romBytes = await loadBinary(
+              "../assets/Super Metroid.sfc"
+            );
+            // Loading in Super Metroid Save State created from exporting withing the webpage
+            stateBytes = await loadBinary(
+              "../assets/sm_save_states/sm_ship.state"
+            );
+            stateSlotBytes[0] = await loadBinary(
+              "../assets/sm_save_states/pre-morphball.state"
+            );
+            stateSlotBytes[1] = await loadBinary(
+              "../assets/sm_save_states/beginning_ship.state"
+            );
+            stateSlotBytes[2] = await loadBinary(
+              "../assets/sm_save_states/morph_ball_achieved.state"
+            );
+            stateSlotBytes[3] = await loadBinary(
+              "../assets/sm_save_states/missiles_achieved.state"
+            );
+            stateSlotBytes[4] = await loadBinary(
+              "../assets/sm_save_states/enemy_encounter.state"
+            )
+            break;
+        }
+
+        let emulator = window.emulator = emulateSnesConsole(
+          romBytes,
+          stateBytes,
+          document.querySelector("#container")
+        );
+          
+        let tempTrue = true;
+        function afterRun() {
+          dv = new DataView(
+            // using this line of code made it so that it was undefined towards accessing that dv, making the room location state just NULL all the time
+            // emulator.retro.get_memory_data(2).buffer
+            // it was fixed by returning this back to how it was before, however i thought this was only the copy and not a direct influence??
+            emulator.retro.get_memory_data(2).slice(0, 0x2000).buffer
+          );
+
+          let x = dv.getUint8(0x0b04);
+          let y = dv.getUint8(0x0b06);
+          var coords = abstractify_pos_global(dv, map_area_offsets);
+          player.x = coords[0], player.y = coords[1];
+
+          verifyPlayerState();
+        }
+
+        function checkInventory() {
+          console.log("Equipped Item/ " + dv.getUint8(0x09A2));
+          console.log("Items Collected/ " + dv.getUint8(0x09A4));
+        }
+
+        emulator.addEventListener("afterRun", afterRun);
+
+        // initialize the emulator and chat functionality on player page as well as Gemini Chat
+        initEmulatorPage(emulator, export_state);
+        initChatPage();
+        initGeminiChat();
+        
+        // Save state functionality for Coach
+        const saveSlots = new Array(10);
+        saveSlots[0] = stateBytes;
+        saveSlots[5] = stateSlotBytes[0];
+        saveSlots[6] = stateSlotBytes[1];
+        saveSlots[7] = stateSlotBytes[2];
+        saveSlots[8] = stateSlotBytes[3];
+        saveSlots[9] = stateSlotBytes[4];
+
+        knownFunctions = {
+          set_energy_level({level}) {
+            dv.setUint8(0x09C2, level);
+            return dv.getUint8(0x09C2);
+          },
+          get_player_state() {
+            const state = getCurrentPlayerState(dv);
+            return JSON.stringify(state);
+          },
+          save_to_slot({slot_index}) {
+            saveSlots[slot_index] = emulator.retro.serialize().slice();
+            return "Done.";
+          },
+          load_from_slot({slot_index}) {
+            try {
+              emulator.retro.unserialize(saveSlots[slot_index]);
+              return "Done.";
+            } catch (error) {
+              return "Error: " + error;
+            }
+          },
+          evaluate_js_with_confirmation({code}) {
+            if (confirm("Allow running this code?\n\n"+code)) {
+              return "Code execution result: "+ eval(code);
+            } else {
+              return "The user disallowed this code execution.";
+            }
+          },
+          get_set_bits_from_packed_value({packed_value}) {
+            // Function to get set bits from a packed value
+            const bits = [];
+            for (let i = 0; i < 16; i++) {
+              if (packed_value & (1 << i)) {
+                bits.push(i);
+              }
+            }
+            return bits;
+          },
+          async get_next_step_on_plan_to_beat_game({nodeName, itemList}) {
+            // return "Head to the right"; // placeholder value
+            let response = await fetch("http://localhost:8008/next_node", {
+              method: "POST",
+              headers: {
+              "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ nodeName, itemList })
+            });
+            return await response.json();
+
+          },
+          async get_node_info({nodeName}) {
+            // example: http://localhost:8008/node/Parlor_R1
+            let response = await fetch("http://localhost:8008/node/" + nodeName);
+            return await response.json();
+          }
+          ,
+          set_whiteboard_content({msg}) {
+            try {
+              setWhiteboardContent(msg);
+              return "Done.";
+            } catch (e) {
+              return "Error: " + (e && e.message ? e.message : e);
+            }
+          }
+        };
+        
+        /* ----- Function for passing in current player state ----- */
+        // Player State function (ONLY WORKS FOR SUPER METROID)
+        function getCurrentPlayerState(dv) {
+          return {
+            energy: dv.getUint8(0x09C2),
+            missiles: dv.getUint8(0x09C6),
+            inventory: knownFunctions.get_set_bits_from_packed_value({packed_value: dv.getUint16(0x09A4, true)}),
+            // inventory: dv.getUint16(0x09A4, true),
+            closestNode: player.closestNode
+          }
+        }
+
+        // Function to check the player's past state compared to any new upcoming changes, if so update the state and pass the passive info to the coach
+        function verifyPlayerState() {
+          let newPlayerState = getCurrentPlayerState(dv);
+          // console.log(JSON.stringify(currentPlayerState));
+          // console.log(newPlayerState);
+          // console.log("---------------");
+          if (JSON.stringify(newPlayerState) !== JSON.stringify(currentPlayerState)) {
+            currentPlayerState = newPlayerState;
+            console.log(currentPlayerState);
+            sendGeminiMessage({ to: "Coach", from: "Game", text: JSON.stringify(currentPlayerState) });
+          }
+        }
+      };
+      
+      window.send_message = function(text) {
+        sendGeminiMessage({ to: "Coach", from: "Player", text: ""+text });
+      }
+
+      /* --------------- Map Functionality --------------- */
+      // Creates the leaflet map
+      const base = {
+        width: 18432, // pixels
+        height: 16896, // pixels
+        pixelsPerDegree: 128,
+        offsetY: -14336,
+        offsetX: -1280,
+      };
+
+      // Convert from pixel xy coords to the map coords
+      // which expects y,x degrees
+      function pxy_to_loc(pxy) {
+        return [
+          (base.offsetY + base.height - pxy[1]) / base.pixelsPerDegree,
+          (base.offsetX + pxy[0]) / base.pixelsPerDegree,
+        ];
+      }
+      const bounds = [
+        [
+          base.offsetY / base.pixelsPerDegree,
+          base.offsetX / base.pixelsPerDegree,
+        ],
+        [
+          (base.offsetY + base.height) / base.pixelsPerDegree,
+          (base.offsetX + base.width) / base.pixelsPerDegree,
+        ],
+      ];
+      const padding = Math.min(base.width, base.height) / 2;
+      const maxBounds = [
+        [
+          (base.offsetY - padding) / base.pixelsPerDegree,
+          (base.offsetX - padding) / base.pixelsPerDegree,
+        ],
+        [
+          (base.offsetY + base.height + padding) / base.pixelsPerDegree,
+          (base.offsetX + base.width + padding) / base.pixelsPerDegree,
+        ],
+      ];
+
+      const map = L.map("map", {
+        maxBounds: maxBounds,
+        crs: L.CRS.Simple,
+      }).fitBounds(bounds);
+
+      // Create a custom pane for the player range circle, behind markers
+      map.createPane('playerRangePane');
+      map.getPane('playerRangePane').style.zIndex = 299; // Default marker zIndex is 400
+      map.getPane('playerRangePane').style.pointerEvents = 'none'; // Prevents blocking interaction
+
+      L.tileLayer(
+        "https://bin0al.github.io/Super_Metroid_World_Map/Mapfiles/{z}/{x}/{y}.png",
+        {
+          minZoom: 3,
+          maxZoom: 8,
+          attribution:
+            '<a href="https://www.snesmaps.com/">Base Map from snesmaps.com</a>',
+          detectRetina: true,
+        }
+      ).addTo(map);
+
+      function mk_room_rect(room_name) {
+        const pixels_per_maptile = 256;
+        const room_info = all_rooms[room_name];
+        const r = room_info["Region"];
+
+        let rect_start_mt = room_info["Map_Pos"];
+        rect_start_mt = [
+          rect_start_mt[0] + map_area_offsets[r][0],
+          rect_start_mt[1] + map_area_offsets[r][1],
+        ];
+        if (crateria2_rooms.includes(room_name)) {
+          rect_start_mt[0] += crateria2_offset[0];
+          rect_start_mt[1] += crateria2_offset[1];
+        }
+
+        const start_pxy = [
+          rect_start_mt[0] * pixels_per_maptile,
+          rect_start_mt[1] * pixels_per_maptile,
+        ];
+
+        const end_pxy = [
+          start_pxy[0] + room_info["Extent"][0] * pixels_per_maptile,
+          start_pxy[1] + room_info["Extent"][1] * pixels_per_maptile,
+        ];
+
+        const rect = L.rectangle([pxy_to_loc(start_pxy), pxy_to_loc(end_pxy)], {
+          color: `hsl(${(360 * r) / 5}, 50%, 50%, 35%)`,
+        }).addTo(map);
+
+        rect.bindTooltip(
+          `${room_name.replaceAll("_", " ")}, ${map_area_names[r]}`
+        );
+      }
+
+      Object.keys(all_rooms).forEach(mk_room_rect);
+
+      function mk_node_circ(node_name) {
+        const pos = all_nodes[node_name];
+        const loc = pos_to_loc(pos)
+        const circ = L.circle(loc, {
+           radius: 0.2}).addTo(map);
+        // Store for proximity checking
+        player.nodeList.push({ circ, loc, name: node_name });
+        //TODO: add click callback to write goal.json
+        circ.bindTooltip(
+         `${node_name.replaceAll("_", " ")}`
+        );
+        circ.on('click', (event) => {
+           fetch(node_name); // Will Fail!
+           document.getElementById("goal").innerHTML = node_name;
+        });
+
+      }
+      Object.keys(all_nodes).forEach(mk_node_circ);
+
+      function pos_to_loc(pos) {
+        return pxy_to_loc([pos[0] * 16, pos[1] * 16])
+      }
+
+      // Track Player Position
+      // Arbitrary
+      const start_loc = pos_to_loc([285, 562]);
+      player.marker = L.circle(start_loc, {
+        radius: 0.2, color: `hsl(322, 50%, 50%)`,
+      }).addTo(map);
+    
+      player.range = L.circle(start_loc, {
+        radius: 0.5, color: `hsl(50, 10%, 70%)`,
+        pane: 'playerRangePane'
+      }).addTo(map);
+
+      // green marker: hsl(100, 100%, 50%)
+
+      function update_pos() {
+        const loc = pos_to_loc([player.x, player.y]);
+        player.marker.setLatLng(loc);
+        player.range.setLatLng(loc);
+      }
+      update_pos();
+
+      // Function to calculate distance between two [lat, lng] points (Euclidean for small distances)
+      function latLngDistance(a, b) {
+        const dx = a[0] - b[0];
+        const dy = a[1] - b[1];
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      function pos_list_to_loc(pos_list) {
+        return pos_list.map(pos_to_loc)
+      }
+
+      setInterval(update_pos, 100);
+
+      // --- Adjacent node detection and closest node highlighting ---
+      function adjacentNodeDetection() {
+        const playerLoc = pos_to_loc([player.x, player.y]);
+        const radius = player.range.getRadius();
+        // Find all adjacent nodes within radius
+        const adjacent = player.nodeList.filter(obj => latLngDistance(obj.loc, playerLoc) <= radius);
+        // console.log("Adjacent nodes:", adjacent.map(obj => obj.name));
+        const adjacentNames = adjacent.map(obj => obj.name);
+        // Find the closest node among all nodes (not just adjacent)
+        let closest = null;
+        let minDist = Infinity;
+        for (const obj of adjacent) {
+          const dist = latLngDistance(obj.loc, playerLoc);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = obj;
+          }
+        }
+        // Color code: green for closest node, blue for others
+        if(closest != null) {
+          player.nodeList.forEach(obj => {
+            if (obj === closest) {
+              obj.circ.setStyle({ color: 'hsl(100, 100%, 50%)' }); // green
+              player.closestNode = obj.name;
+            } else {
+              obj.circ.setStyle({ color: '#3388ff' }); // blue
+            }
+          });
+        }
+      }
+      setInterval(adjacentNodeDetection, 1000);
+
+      function setWhiteboardContent(msg) {
+        const wb = document.getElementById('whiteboard');
+        if (!wb) {
+          return;
+        }
+        
+        wb.innerHTML = '';
+        const text = (msg === undefined || msg === null) ? '' : String(msg).trim();
+        if (!text) {
+          wb.innerHTML = '<div style="opacity:0.6">Empty content</div>';
+          return;
+        }
+
+        const lower = text.toLowerCase();
+
+        // If the user asked for a map, create a Leaflet map inside the whiteboard
+        if (lower === 'map' || lower.startsWith('map') || lower.includes('show map')) {
+          const mapDiv = document.createElement('div');
+          mapDiv.id = 'whiteboard-map';
+          mapDiv.style.width = '100%';
+          mapDiv.style.height = '480px';
+          wb.appendChild(mapDiv);
+
+          // Remove any previous whiteboard map
+          if (window.whiteboardMap) {
+            try { window.whiteboardMap.remove(); } catch (e) { }
+            window.whiteboardMap = null;
+          }
+
+          // Create a simplified copy of the main map focused on the player
+          const wbMap = L.map(mapDiv, { crs: L.CRS.Simple, maxBounds: maxBounds }).fitBounds(bounds);
+          L.tileLayer(
+            "https://bin0al.github.io/Super_Metroid_World_Map/Mapfiles/{z}/{x}/{y}.png",
+            { minZoom: 3, maxZoom: 8, detectRetina: true }
+          ).addTo(wbMap);
+
+          // Add a marker for the player
+          try {
+            const loc = pos_to_loc([player.x, player.y]);
+            L.circle(loc, { radius: 0.2, color: `hsl(322, 50%, 50%)` }).addTo(wbMap);
+            L.circle(loc, { radius: 0.5, color: `hsl(50, 10%, 70%)` }).addTo(wbMap);
+          } catch (e) {
+            console.warn('Could not place player marker on whiteboard map', e);
+          }
+
+          window.whiteboardMap = wbMap;
+          return;
+        }
+
+        // If it's an image URL, embed the image
+        if (/^https?:\/\/.+\.(png|jpg|jpeg|gif|svg)(\?.*)?$/i.test(text)) {
+          const img = document.createElement('img');
+          img.src = text;
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          wb.appendChild(img);
+          return;
+        }
+
+        // Otherwise, render as Markdown/HTML (marked is already imported)
+        try {
+          wb.innerHTML = marked(text);
+        } catch (e) {
+          // Fallback to plain text
+          wb.textContent = text;
+        }
+      }
+
+      /* --------------- Chat Functionality --------------- */
+      function initChatPage() {
+        // Send message through button on screen
+        document.getElementById("sendBusMessage").onclick = () => {
+          let textFieldValue = document.getElementById("user-input").value;
+          if(textFieldValue.trim().length > 0) {
+            sendGeminiMessage({ to: "Coach", from: "Player", text: textFieldValue });
+            document.getElementById("user-input").value = ""; // Clears text box for new text
+          }
+        };
+        // Send message through pressing enter
+        document.getElementById("user-input").addEventListener("keypress", (e) => {
+          let textFieldValue = document.getElementById("user-input").value;
+          if (e.key === "Enter" && textFieldValue.trim().length > 0) {
+            sendGeminiMessage({ to: "Coach", from: "Player", text: textFieldValue });
+            document.getElementById("user-input").value = ""; // Clears text box for new text
+          }
+        });
+        
+        // Creates a button to download the current chat history transcript into local files
+        export_transcript.addEventListener("click", () => {
+          const filename = "transcript.json";
+          const transcriptContent = JSON.stringify(messageHistory);
+          let element = document.createElement("a");
+          element.setAttribute(
+            "href",
+            "data:text/plain;charset=utf-8," +
+              encodeURIComponent(transcriptContent)
+          );
+          element.setAttribute("download", filename);
+          element.style.display = "none";
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+        });
+        
+        emulator.canvas.addEventListener('keydown', (e) => {
+          if(e.code === "Space" && !isListening) {
+            try {
+              recognition.start();
+              isListening = true;
+              console.log("Started listening...");
+              document.getElementById("speechtotext").textContent = "!! Speaking !!";
+            } catch (e) {
+              console.warn("Recognition already started or error:", e);
+            }
+          }
+        });
+
+        // shortcut to enable Speech-to-Text
+        emulator.canvas.addEventListener('keyup', (e) => {
+          if(e.code === "Space" && isListening) {
+            recognition.stop();
+            isListening = false;
+            console.log("Ending recognition...");
+          }
+        });
+
+      }
+            
+      // Speech to Text Feature, ONLY WORKS IN CHROME
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Your browser does not support the Web Speech API.");
+      } else {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          document.getElementById("user-input").value = transcript;
+          console.log("TRANSCRIPT: " + transcript);
+        };
+
+        recognition.onerror = function(event) {
+          console.error("Speech recognition error:", event.error);
+        };
+
+        recognition.onend = function() {
+          isListening = false;
+          console.log("Stopped listening");
+          document.getElementById("speechtotext").textContent = "Hold SPACE BAR to Speak!";
+          if(document.getElementById("user-input").value.trim() != "") {
+           sendGeminiMessage({ to: "Coach", from: "Player", text: document.getElementById("user-input").value });
+            document.getElementById("user-input").value = "";
+          }
+        };
+      }
+    </script>
+  </body>
+</html>

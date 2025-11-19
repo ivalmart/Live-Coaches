@@ -46,6 +46,9 @@ class SnesEmulator extends HTMLElement {
             this.stateBytes = null;
         }
 
+        // let coachPrompt = await fetch('./prompts/coach-prompt.txt');
+        // console.log(await coachPrompt.text());
+
         // Initialize emulator w/ emulator functionality and controls
         this.setupEmulator(retro, thingpixel);
         this.setupKeyboard();
@@ -104,9 +107,9 @@ class SnesEmulator extends HTMLElement {
             //console.log('input_state', port, device, input, id);
             const key = [port, device, input, id].toString();
             if (input_state[key]) {
-            return input_state[key];
+                return input_state[key];
             } else {
-            return 0; // not pressed by default
+                return 0; // not pressed by default
             }
         });
         
