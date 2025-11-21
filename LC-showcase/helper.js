@@ -16,7 +16,7 @@ export function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
   if (!apiKey) {
     let txt_apiKey = fetch("../api_key.txt");
-    
+
     if(!txt_apiKey) {
       apiKey = prompt("Please enter your Gemini API key:");
     } else {
@@ -34,11 +34,13 @@ export function displayMessage(sender, message, chatDisplay, history) {
   if(!message) {
     return;
   }
+
+  if(sender == "FunctionCall" || sender == "FunctionResults") {
+    sender = "🔧";
+  }
   
   const messageElement = document.createElement("div");
-  messageElement.innerHTML = `<strong>${sender}:</strong> ${marked.parse(
-    message
-  )}`;
+  messageElement.innerHTML = `<strong>${sender}:</strong>${marked.parse(message)}`;
   chatDisplay.appendChild(messageElement);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
   
@@ -67,11 +69,35 @@ function findInputIndex(key) {
   return input_buttons.findIndex((button) => button.key === key);
 }
 
+// EXPORT HANDLER: Downloads the current game state onto local files
+export function downloadGameState(emulator) {
+  let buffer = emulator.retro.serialize();
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${getGameFromSearchParams()}.state`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
 /* ----- Helper Code for Initialization ----- */
 // EMULATOR: Receives emulator object and initializes the player page for player controls, emulator page
-export function initEmulatorPage(emulator, export_state) {
+export function initEmulatorPage(emulator) {
   // CONTROLLER HANDLER: Registers keyboard Inputs through the Game Window. Connects keyboard inputs into emulator controls
   emulator.canvas.addEventListener("keydown", (e) => {
+    // Toggle fullscreen
+    if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+            emulator.canvas.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+        e.preventDefault();
+        return;
+    }
+    
     const index = findInputIndex(e.key);
     const keyState = `0,1,0,${index}`;
     // Checks to see if the key pressed down exists inside the keyboard inputs
@@ -89,18 +115,18 @@ export function initEmulatorPage(emulator, export_state) {
     }
   });
   
-  // EXPORT HANDLER: Creates a button to download the current game state onto local files
-  export_state.addEventListener("click", () => {
-    let buffer = emulator.retro.serialize();
-    const blob = new Blob([buffer], { type: 'application/octet-stream' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${getGameFromSearchParams()}.state`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-  })
+  // // EXPORT HANDLER: Creates a button to download the current game state onto local files
+  // export_state.addEventListener("click", () => {
+  //   let buffer = emulator.retro.serialize();
+  //   const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  //   const link = document.createElement('a');
+  //   link.href = URL.createObjectURL(blob);
+  //   link.download = `${getGameFromSearchParams()}.state`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   URL.revokeObjectURL(link.href);
+  // })
   
   // CONTROLLER HANDLER: Creates toggle button to show/hide SNES controller instructions
   const toggleButton = document.getElementById("toggleControls");
