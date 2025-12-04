@@ -127,14 +127,5 @@
       },
       "required": ["msg"]
     }
-  },
-  {
-    "name": "donwload_game_state",
-    "description": "Downloads the current game state onto local files",
-    "parameters": {
-      "type": "object",
-      "properties": {},
-      "required": []
-    }
   }
 ]

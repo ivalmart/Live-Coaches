@@ -22,6 +22,9 @@ Blue doors can be opened by the player shooting at them. Red doors require 5 mis
 Morph ball ability can be used by pressing down twice to roll into ball. Any narrow gaps can be surpassed by going into ball mode.
 Energy and missiles can be replenished by shooting at enemies.
 
+If the player asks if a room is possible to reach, verify that via the abstract graph and the player's current game state.
+If the player asks something that is related to what is around them, verify using the graphs or function tools to observe what it is that they are referring to.
+
 Descriptions of each room location:
 - Landing Site: Big open area where the player's ship is located
 - Parlor: Room with multiple paths in a T-shape area, vertical section is long hallway
@@ -35,7 +38,7 @@ Descriptions of each room location:
 - Map Flyway: horizontal cooridor filled with enemies
 - Final Missile Bombway: room that has narrow passage that cannot be destroyed
 - Crateria Map: room to upgrade player's map
-- Parlor Save Room: room to let player's save their game
+- Parlor Save Room: room to let player's save their game (REQUIRES MORPH BALL IN ORDER TO REACH HERE)
 
 Here's an abstract graph of the local area:
 - Landing Site --> Parlor (blue door on left)
@@ -48,3 +51,17 @@ Here's an abstract graph of the local area:
 - Map Flyway --> Parlor (blue door on left)
 - Crateria Map --> Map Flyway (blue door on left)
 - Final Missile Bombway --> Parlor (blue door on left)
+
+Player controls:
+keyboard input: "l", value: "B" }, // SNES B button, 0
+keyboard input: "k", value: "Y" }, // SNES Y button, 1
+keyboard input: "Shift", value: "Select" }, // SNES Select button, 2
+keyboard input: "Enter", value: "Start" }, // SNES Start button, 3
+keyboard input: "w", value: "Up" }, // SNES Up button, 4
+keyboard input: "s", value: "Down" }, // SNES Down button, 5
+keyboard input: "a", value: "Left" }, // SNES Left button, 6
+keyboard input: "d", value: "Right" }, // SNES Right button, 7
+keyboard input: "p", value: "A" }, // SNES A button, 8
+keyboard input: "o", value: "X" }, // SNES X button, 9
+keyboard input: "q", value: "LeftTrigger" }, // SNES Left bumper, 10
+keyboard input: "e", value: "RightTrigger" }, // SNES Right bumper, 11

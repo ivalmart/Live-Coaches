@@ -24,22 +24,7 @@
         <div class="column"> 
           <div id="container"></div>
           <button class="defaultButton" id="toggleMap">Show Map</button>
-          <!-- Controller Instructions on Keyboard -->
-          <button class="defaultButton" id="toggleControls">Show Controls</button>
-          <div id="button_input_handler" style="display: none;">
-            <div class="row">
-              <div class="column">
-                <b><u>Controls:</u></b><br />
-                <b>Up:</b>-W-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<b>A Button:</b>-P-&nbsp;|<b>X Button:</b>-O-<br />
-                <b>Left:</b>-A-&nbsp;&nbsp;&nbsp;&nbsp;|<b>B Button:</b>-L-&nbsp;|<b>Y Button:</b>-K-<br />
-                <b>Down:</b>-S-&nbsp;|<b>Start:</b>-Enter-&nbsp;|<b>Left Trigger:</b>-Q-<br />
-                <b>Right:</b>-D-&nbsp;|<b>Select:</b>-R Shift-&nbsp;|<b>Right Trigger:</b>-E-<br />
-                <b>Full Screen:</b>-F-&nbsp;
-              </div>
-            </div>
-          </div>
         </div>
-
         <!-- Gemini + Player Chat Functionality -->
         <div class="column"> 
           <div class="instructions">
@@ -60,7 +45,9 @@
     </div>
     <p hidden id="goal">Goal</p>
  
-    <div class="whiteboard" id="whiteboard"></div>
+    <div class="whiteboard" id="whiteboard">
+      <div id="whiteboard-map" style="height: 480px; width: 100%; display: none;"></div>
+    </div>
     <div id="map" style="height: 500px; width: 100%; max-width: 1000px; background: #444;"></div>
 
     <a class="example" href="?Game=SuperMetroid" style="display: none;">Super Metroid</a>
@@ -122,7 +109,7 @@
           }
             
           try {
-            return;
+            return; // holding off Gemini responses for now
             let response = await chat.sendMessage({
               message: `from=${message.from.toLowerCase()}\n` + message.text,
             });
@@ -223,6 +210,9 @@
         // Save state functionality for Coach
         stateBytes = await loadBinary(
           "../assets/sm_save_states/sm_ship.state"
+        );
+        saveSlots[4] = await loadBinary(
+          "../assets/sm_save_states/nextdoor-saveroom.state"
         );
         saveSlots[5] = await loadBinary(
           "../assets/sm_save_states/pre-morphball.state"
@@ -368,6 +358,15 @@
         downloadGameState(emulator);
       }
 
+      window.createMap = function() {
+        const wb = document.getElementById('whiteboard');
+        const mapDiv = document.getElementById('whiteboard-map');
+        wb.innerHTML = '';
+        mapDiv.style.display = 'block';
+        wb.appendChild(mapDiv);
+        generateMap('whiteboard-map', true);
+      }
+
       window.download_chat_transcript = function() {
         const filename = "transcript.json";
         const transcriptContent = JSON.stringify(messageHistory);
@@ -384,6 +383,9 @@
         document.body.removeChild(element);
       }
       
+      window.load_state = function(slot_index) {
+        knownFunctions.load_from_slot({slot_index});
+      }
 
       /* --------------- Map Functionality --------------- */
       // Creates the leaflet map
@@ -425,104 +427,129 @@
         ],
       ];
 
-      const map = L.map("map", {
-        maxBounds: maxBounds,
-        crs: L.CRS.Simple,
-      }).fitBounds(bounds);
-
-      // Create a custom pane for the player range circle, behind markers
-      map.createPane('playerRangePane');
-      map.getPane('playerRangePane').style.zIndex = 299; // Default marker zIndex is 400
-      map.getPane('playerRangePane').style.pointerEvents = 'none'; // Prevents blocking interaction
-
-      L.tileLayer(
-        "https://bin0al.github.io/Super_Metroid_World_Map/Mapfiles/{z}/{x}/{y}.png",
-        {
-          minZoom: 3,
-          maxZoom: 8,
-          attribution:
-            '<a href="https://www.snesmaps.com/">Base Map from snesmaps.com</a>',
-          detectRetina: true,
-        }
-      ).addTo(map);
-
-      function mk_room_rect(room_name) {
-        const pixels_per_maptile = 256;
-        const room_info = all_rooms[room_name];
-        const r = room_info["Region"];
-
-        let rect_start_mt = room_info["Map_Pos"];
-        rect_start_mt = [
-          rect_start_mt[0] + map_area_offsets[r][0],
-          rect_start_mt[1] + map_area_offsets[r][1],
-        ];
-        if (crateria2_rooms.includes(room_name)) {
-          rect_start_mt[0] += crateria2_offset[0];
-          rect_start_mt[1] += crateria2_offset[1];
+      // ============ MAP GENERATION FUNCTION ============
+      function generateMap(mapElementId, includePlayerTracking = false) {
+        // Clean up existing map if it exists already
+        const existingMap = window[mapElementId + '_leafletMap'];
+        if (existingMap) {
+          try { existingMap.remove(); } catch (e) { }
         }
 
-        const start_pxy = [
-          rect_start_mt[0] * pixels_per_maptile,
-          rect_start_mt[1] * pixels_per_maptile,
-        ];
+        const mapInstance = L.map(mapElementId, {
+          maxBounds: maxBounds,
+          crs: L.CRS.Simple,
+        }).fitBounds(bounds);
 
-        const end_pxy = [
-          start_pxy[0] + room_info["Extent"][0] * pixels_per_maptile,
-          start_pxy[1] + room_info["Extent"][1] * pixels_per_maptile,
-        ];
+        // Create a custom pane for the player range circle, behind markers
+        mapInstance.createPane('playerRangePane');
+        mapInstance.getPane('playerRangePane').style.zIndex = 299;
+        mapInstance.getPane('playerRangePane').style.pointerEvents = 'none';
 
-        const rect = L.rectangle([pxy_to_loc(start_pxy), pxy_to_loc(end_pxy)], {
-          color: `hsl(${(360 * r) / 5}, 50%, 50%, 35%)`,
-        }).addTo(map);
+        L.tileLayer(
+          "https://bin0al.github.io/Super_Metroid_World_Map/Mapfiles/{z}/{x}/{y}.png",
+          {
+            minZoom: 3,
+            maxZoom: 8,
+            attribution:
+              '<a href="https://www.snesmaps.com/">Base Map from snesmaps.com</a>',
+            detectRetina: true,
+          }
+        ).addTo(mapInstance);
 
-        rect.bindTooltip(
-          `${room_name.replaceAll("_", " ")}, ${map_area_names[r]}`
-        );
+        // Add room rectangles
+        function addRoomRectangle(room_name) {
+          const pixels_per_maptile = 256;
+          const room_info = all_rooms[room_name];
+          const r = room_info["Region"];
+
+          let rect_start_mt = room_info["Map_Pos"];
+          rect_start_mt = [
+            rect_start_mt[0] + map_area_offsets[r][0],
+            rect_start_mt[1] + map_area_offsets[r][1],
+          ];
+          if (crateria2_rooms.includes(room_name)) {
+            rect_start_mt[0] += crateria2_offset[0];
+            rect_start_mt[1] += crateria2_offset[1];
+          }
+
+          const start_pxy = [
+            rect_start_mt[0] * pixels_per_maptile,
+            rect_start_mt[1] * pixels_per_maptile,
+          ];
+
+          const end_pxy = [
+            start_pxy[0] + room_info["Extent"][0] * pixels_per_maptile,
+            start_pxy[1] + room_info["Extent"][1] * pixels_per_maptile,
+          ];
+
+          const rect = L.rectangle([pxy_to_loc(start_pxy), pxy_to_loc(end_pxy)], {
+            color: `hsl(${(360 * r) / 5}, 50%, 50%, 35%)`,
+          }).addTo(mapInstance);
+
+          rect.bindTooltip(
+            `${room_name.replaceAll("_", " ")}, ${map_area_names[r]}`
+          );
+        }
+
+        Object.keys(all_rooms).forEach(addRoomRectangle);
+
+        // Add node circles
+        function addNodeCircle(node_name, isMainMap = false) {
+          const pos = all_nodes[node_name];
+          const loc = pos_to_loc(pos)
+          const circ = L.circle(loc, {
+             radius: 0.2}).addTo(mapInstance);
+          
+          // Only track nodes for main map
+          if (isMainMap) {
+            player.nodeList.push({ circ, loc, name: node_name });
+            circ.on('click', (event) => {
+               fetch(node_name); // Will Fail!
+               document.getElementById("goal").innerHTML = node_name;
+            });
+          }
+          
+          circ.bindTooltip(
+           `${node_name.replaceAll("_", " ")}`
+          );
+        }
+
+        Object.keys(all_nodes).forEach(name => addNodeCircle(name, includePlayerTracking));
+
+        // Add player tracking elements if requested
+        if (includePlayerTracking) {
+          const start_loc = pos_to_loc([player.x, player.y]);
+          const playerMarker = L.circle(start_loc, {
+            radius: 0.2, color: `hsl(322, 50%, 50%)`,
+          }).addTo(mapInstance);
+        
+          const playerRange = L.circle(start_loc, {
+            radius: 0.5, color: `hsl(50, 10%, 70%)`,
+            pane: 'playerRangePane'
+          }).addTo(mapInstance);
+
+          // Store references for main map updates
+          mapInstance.playerMarker = playerMarker;
+          mapInstance.playerRange = playerRange;
+        }
+
+        // Store map reference for later access
+        window[mapElementId + '_leafletMap'] = mapInstance;
+        return mapInstance;
       }
 
-      Object.keys(all_rooms).forEach(mk_room_rect);
-
-      function mk_node_circ(node_name) {
-        const pos = all_nodes[node_name];
-        const loc = pos_to_loc(pos)
-        const circ = L.circle(loc, {
-           radius: 0.2}).addTo(map);
-        // Store for proximity checking
-        player.nodeList.push({ circ, loc, name: node_name });
-        //TODO: add click callback to write goal.json
-        circ.bindTooltip(
-         `${node_name.replaceAll("_", " ")}`
-        );
-        circ.on('click', (event) => {
-           fetch(node_name); // Will Fail!
-           document.getElementById("goal").innerHTML = node_name;
-        });
-
-      }
-      Object.keys(all_nodes).forEach(mk_node_circ);
+      const map = generateMap('map', true);
 
       function pos_to_loc(pos) {
         return pxy_to_loc([pos[0] * 16, pos[1] * 16])
       }
 
-      // Track Player Position
-      // Arbitrary
-      const start_loc = pos_to_loc([285, 562]);
-      player.marker = L.circle(start_loc, {
-        radius: 0.2, color: `hsl(322, 50%, 50%)`,
-      }).addTo(map);
-    
-      player.range = L.circle(start_loc, {
-        radius: 0.5, color: `hsl(50, 10%, 70%)`,
-        pane: 'playerRangePane'
-      }).addTo(map);
-
       // green marker: hsl(100, 100%, 50%)
 
       function update_pos() {
         const loc = pos_to_loc([player.x, player.y]);
-        player.marker.setLatLng(loc);
-        player.range.setLatLng(loc);
+        map.playerMarker.setLatLng(loc);
+        map.playerRange.setLatLng(loc);
       }
       update_pos();
 
@@ -542,7 +569,7 @@
       // --- Adjacent node detection and closest node highlighting ---
       function adjacentNodeDetection() {
         const playerLoc = pos_to_loc([player.x, player.y]);
-        const radius = player.range.getRadius();
+        const radius = map.playerRange.getRadius();
         // Find all adjacent nodes within radius
         const adjacent = player.nodeList.filter(obj => latLngDistance(obj.loc, playerLoc) <= radius);
         // console.log("Adjacent nodes:", adjacent.map(obj => obj.name));
@@ -636,13 +663,38 @@
       }
 
       /* --------------- Whiteboard Functionality --------------- */
+      let whiteboardUpdateInterval = null;
+
+      function updateWhiteboardMap() {
+        const wbMap = window['whiteboard-map_leafletMap'];
+        if (!wbMap) return;
+
+        // Update player marker position
+        try {
+          const loc = pos_to_loc([player.x, player.y]);
+          if (wbMap.playerMarker) {
+            wbMap.playerMarker.setLatLng(loc);
+          }
+          if (wbMap.playerRange) {
+            wbMap.playerRange.setLatLng(loc);
+          }
+        } catch (e) {
+          console.warn('Could not update player position on whiteboard map', e);
+        }
+      }
+
       function setWhiteboardContent(msg) {
         const wb = document.getElementById('whiteboard');
         if (!wb) {
           return;
         }
 
-        wb.innerHTML = '';
+        // Clear any existing update interval
+        if (whiteboardUpdateInterval) {
+          clearInterval(whiteboardUpdateInterval);
+          whiteboardUpdateInterval = null;
+        }
+
         const text = (msg === undefined || msg === null) ? '' : String(msg).trim();
         if (!text) {
           wb.innerHTML = '<div style="opacity:0.6">Empty content</div>';
@@ -653,40 +705,24 @@
 
         // If the user asked for a map, create a Leaflet map inside the whiteboard
         if (lower === 'map' || lower.startsWith('map') || lower.includes('show map')) {
+          wb.innerHTML = '';
           const mapDiv = document.createElement('div');
           mapDiv.id = 'whiteboard-map';
           mapDiv.style.width = '100%';
           mapDiv.style.height = '480px';
           wb.appendChild(mapDiv);
 
-          // Remove any previous whiteboard map
-          if (window.whiteboardMap) {
-            try { window.whiteboardMap.remove(); } catch (e) { }
-            window.whiteboardMap = null;
-          }
+          // Generate map using the reusable function (with player tracking)
+          generateMap('whiteboard-map', true);
 
-          // Create a simplified copy of the main map focused on the player
-          const wbMap = L.map(mapDiv, { crs: L.CRS.Simple, maxBounds: maxBounds }).fitBounds(bounds);
-          L.tileLayer(
-            "https://bin0al.github.io/Super_Metroid_World_Map/Mapfiles/{z}/{x}/{y}.png",
-            { minZoom: 3, maxZoom: 8, detectRetina: true }
-          ).addTo(wbMap);
-
-          // Add a marker for the player
-          try {
-            const loc = pos_to_loc([player.x, player.y]);
-            L.circle(loc, { radius: 0.2, color: `hsl(322, 50%, 50%)` }).addTo(wbMap);
-            L.circle(loc, { radius: 0.5, color: `hsl(50, 10%, 70%)` }).addTo(wbMap);
-          } catch (e) {
-            console.warn('Could not place player marker on whiteboard map', e);
-          }
-
-          window.whiteboardMap = wbMap;
+          // Start continuously updating the player position on the whiteboard
+          whiteboardUpdateInterval = setInterval(updateWhiteboardMap, 100);
           return;
         }
 
         // If it's an image URL, embed the image
         if (/^https?:\/\/.+\.(png|jpg|jpeg|gif|svg)(\?.*)?$/i.test(text)) {
+          wb.innerHTML = '';
           const img = document.createElement('img');
           img.src = text;
           img.style.maxWidth = '100%';
@@ -696,6 +732,7 @@
         }
 
         // Otherwise, render as Markdown/HTML (marked is already imported)
+        wb.innerHTML = '';
         try {
           wb.innerHTML = marked(text);
         } catch (e) {

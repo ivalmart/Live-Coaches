@@ -34,13 +34,26 @@ export function displayMessage(sender, message, chatDisplay, history) {
   if(!message) {
     return;
   }
+  // Determine display label, class and emoji
+  let className = '';
+  let emoji = '';
 
-  if(sender == "FunctionCall" || sender == "FunctionResults") {
-    sender = "🔧";
+  if (sender === 'Player') {
+    className = 'Player-name';
+    emoji = '';
+  } else if (sender === 'Coach' || sender === 'Expert' || sender === 'Assistant') {
+    className = 'Coach-name';
+    emoji = '';
+  } else if (sender === 'FunctionCall' || sender === 'FunctionResults') {
+    className = 'FunctionCall';
+    sender = '🔧';
   }
-  
+
   const messageElement = document.createElement("div");
-  messageElement.innerHTML = `<strong>${sender}:</strong>${marked.parse(message)}`;
+  // Build the header markup. Only include emoji span if emoji is set.
+  const header = emoji ? `<strong class="${className}"><span class="chat-emoji">${emoji}</span></strong>` : `<strong class="${className}">${sender}:</strong>`;
+  // If emoji-only header (function), keep just the emoji; otherwise show label followed by ':'
+  messageElement.innerHTML = `${header}${marked.parse(message)}`;
   chatDisplay.appendChild(messageElement);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
   
@@ -113,28 +126,6 @@ export function initEmulatorPage(emulator) {
     if (index != -1) {
       emulator.input_state[keyState] = 0;
     }
-  });
-  
-  // // EXPORT HANDLER: Creates a button to download the current game state onto local files
-  // export_state.addEventListener("click", () => {
-  //   let buffer = emulator.retro.serialize();
-  //   const blob = new Blob([buffer], { type: 'application/octet-stream' });
-  //   const link = document.createElement('a');
-  //   link.href = URL.createObjectURL(blob);
-  //   link.download = `${getGameFromSearchParams()}.state`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  //   URL.revokeObjectURL(link.href);
-  // })
-  
-  // CONTROLLER HANDLER: Creates toggle button to show/hide SNES controller instructions
-  const toggleButton = document.getElementById("toggleControls");
-  const controlsDiv = document.getElementById("button_input_handler");
-  toggleButton.addEventListener("click", () => {
-    const isHidden = controlsDiv.style.display === "none";
-    controlsDiv.style.display = isHidden ? "block" : "none";
-    toggleButton.textContent = isHidden ? "Hide Controls" : "Show Controls";
   });
 
   // TEMP MAP HANDLER: Creates toggle button to show/hide Super Metroid Ross Map

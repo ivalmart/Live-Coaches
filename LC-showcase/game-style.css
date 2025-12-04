@@ -1,10 +1,9 @@
 video {
-  width: 384px;
+  width: 520px;
   border: thick solid white;
 }
 canvas {
-  width: 384px;
-  /* width: 500px; */
+  width: 520px;
   border: thick solid gold;
 }
 body {
@@ -26,7 +25,6 @@ h1 {
   color: #333333;
 }
 
-/* --- Column-style Interface --- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -34,12 +32,12 @@ h1 {
 }
 .container {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 .row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .column {
   flex: 1;
@@ -49,7 +47,6 @@ h1 {
   margin: 1px;
 }
 
-/* --- Right-Side Column for Chat Interface --- */
 .instructions {
   margin: 10px 0;
   color: #666666;
@@ -57,8 +54,8 @@ h1 {
   text-align: left;
 }
 #message_display {
-  font-size: 12px;
-  height: 325px;
+  font-size: 16px;
+  height: 450px;
   overflow-y: scroll;
   border: 1px solid #757575;
   padding: 10px;
@@ -70,23 +67,26 @@ h1 {
   word-break: break-word;
   white-space: pre-wrap;
   background-color: #ffffff;
+  line-height: 1.2;
 }
 
-/* --- Colored Chat Tags --- */
-.Player-name {
-  color: #FF3131;  /* Bright green */
-  font-weight: bold;
+#message_display div {
+  margin-bottom: 4px;
 }
-.Expert-name {
-  color: #ff9900;  /* Orange */
+
+.Player-name {
+  color: #9204ff; 
   font-weight: bold;
 }
 .Coach-name {
-  color: #0219b3;  /* Navy Blue*/
+  color: #0ad511;
   font-weight: bold;
 } 
 
-/* --- Text box to display what game is on --- */
+.chat-emoji {
+  margin-right: 6px;
+}
+
 #gameDisplay {
   margin-top: 20px;
   padding: 15px;
@@ -109,11 +109,10 @@ h1 {
   padding: 1px 2px;
 }
 
-/* --- Whiteboard Style --- */
 .whiteboard {
-  height: 500px;
-  width: 100%;
-  max-width: 1000px;
+  height: 250px;
+  width: 60%;
+  max-width: 700px;
   background: #ffffff;
   color: #000;
   overflow: auto;
