@@ -15,10 +15,10 @@ class ControllerMapping extends HTMLElement {
           <b>Keyboard Controls :</b>
           <span class="keyboard">Key Input</span> Controller Input &nbsp;
           <br><br>
-          <span class="keyboard">W</span><- Up &nbsp;
-          <span class="keyboard">S</span><- Down &nbsp;
-          <span class="keyboard">A</span><- Left &nbsp;
-          <span class="keyboard">D</span><- Right &nbsp;
+          <span class="keyboard">W</span> Up &nbsp;
+          <span class="keyboard">S</span> Down &nbsp;
+          <span class="keyboard">A</span> Left &nbsp;
+          <span class="keyboard">D</span> Right &nbsp;
           <br>
           <span class="keyboard">P</span> A &nbsp;
           <span class="keyboard">L</span> B &nbsp;
@@ -33,6 +33,7 @@ class ControllerMapping extends HTMLElement {
         </div>
       </div>
     `;
+    
     this.shadowRoot.getElementById('toggle').onclick = () => {
       this.showing = !this.showing;
       this.render();

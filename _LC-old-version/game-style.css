@@ -55,10 +55,11 @@ h1 {
 }
 #message_display {
   font-size: 16px;
-  height: 450px;
+  height: 650px;
   overflow-y: scroll;
+  overflow-x: hidden;
   border: 1px solid #757575;
-  padding: 10px;
+  padding: 8px;
   margin-bottom: 10px;
   border-style: solid;
   border-width: 2px;
@@ -111,7 +112,7 @@ h1 {
 
 .whiteboard {
   height: 250px;
-  width: 60%;
+  width: 100%;
   max-width: 700px;
   background: #ffffff;
   color: #000;
@@ -122,4 +123,42 @@ h1 {
   border-radius: 6px;
   opacity: 0.6;
   font-size: 14px;
+}
+
+#message_display details {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  margin: 6px 0;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+#message_display details summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  user-select: none;
+  padding: 1px;
+  border-radius: 1px;
+  margin: 0;
+}
+
+#message_display details pre {
+  white-space: pre-wrap; 
+  word-break: break-word; 
+  overflow-wrap: anywhere;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 6px;
+  margin-top: 8px;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 10px;
+  line-height: 1.4;
 }

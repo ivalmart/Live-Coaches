@@ -1,60 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Live Coach for Super Metroid</title>
-    </head>
-    <body>
-        <link rel="stylesheet" href="../style.css" />
-        <main>
-            <div style="max-width:900px;margin:24px auto;text-align:center;">
-                <h1>Live Coach / SNES Emulator</h1>
-                <p id="status">Loading emulator...</p>
-                <snes-emulator id="emulator" rom-url="../assets/Super Metroid.sfc" rom-name="Super Metroid"></snes-emulator>
-                <controller-mapping></controller-mapping>       
-                <live-coach></live-coach>
-            </div>
-        </main>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Coach for Super Metroid</title>
+  </head>
+  <body>
+    <link rel="stylesheet" href="../style.css" />
+    <!-- Imported Custom Tag Scripts -->
+    <script type="module" src="../tag-scripts/snes-emulator.js"></script>
+    <script type="module" src="../tag-scripts/controller-mapping.js"></script>
+    <script type="module" src="../tag-scripts/live-coach.js"></script>
 
-        <!-- Imported Custom Tag Scripts -->
-        <script type="module" src="../tag-scripts/snes-emulator.js"></script>
-        <script type="module" src="../tag-scripts/controller-mapping.js"></script>
-        <script type="module" src="../tag-scripts/live-coach.js"></script>
-        <!-- Main Script -->
+    <main>
+      <div style="max-width: 900px; margin: 24px auto; text-align: center;">
+        <h1>Live Coach / SNES Emulator</h1>
+        <snes-emulator rom-url="../assets/Super Metroid.sfc" rom-name="SuperMetroid" state-url="../assets/sm_save_states/missiles_achieved.state"></snes-emulator>
+        <controller-mapping></controller-mapping>
+        <live-coach game-name="SuperMetroid"></live-coach>
+      </div>
+    </main>
 
-        <script type="module">
-            // Minimal initializer: wait for the custom element to be defined, then attach safe handlers.
-            const statusEl = document.getElementById('status');
-            const emuEl = document.getElementById('emulator');
-
-            async function initEmulator() {
-                try {
-                    if (customElements.get('snes-emulator') === undefined) {
-                        await customElements.whenDefined('snes-emulator');
-                    }
-                    statusEl.textContent = 'Emulator ready.';
-
-                    // Attach a safe afterRun listener if the element dispatches it.
-                    emuEl.addEventListener('afterRun', () => {
-                        // Keep this minimal: just flip a status dot when running frames.
-                        statusEl.textContent = 'Emulator running — frame updated at ' + new Date().toLocaleTimeString();
-                    });
-
-                    // Provide a simple UI method to get a save state if the element exposes it.
-                    // This avoids assuming internal emulator structure.
-                    window.getEmulatorSaveState = () => {
-                        if (typeof emuEl.getSaveState === 'function') return emuEl.getSaveState();
-                        return null;
-                    };
-                } catch (err) {
-                    statusEl.textContent = 'Emulator failed to initialize: ' + err.message;
-                    console.error(err);
-                }
-            }
-
-            initEmulator();
-                
-        </script>
-    </body>
+    <!-- Main Script -->
+    <script type="module">
+      window.saveGameState = function() {
+        const emulator = document.querySelector('snes-emulator');
+        emulator.exportSaveState();
+      }
+    </script>
+  </body>
 </html>

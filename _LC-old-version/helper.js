@@ -44,16 +44,23 @@ export function displayMessage(sender, message, chatDisplay, history) {
   } else if (sender === 'Coach' || sender === 'Expert' || sender === 'Assistant') {
     className = 'Coach-name';
     emoji = '';
-  } else if (sender === 'FunctionCall' || sender === 'FunctionResults') {
+  } else if (sender === "FunctionCallResults") {
+  // } else if (sender === 'FunctionCall' || sender === 'FunctionResults') {
     className = 'FunctionCall';
     sender = '🔧';
   }
+
 
   const messageElement = document.createElement("div");
   // Build the header markup. Only include emoji span if emoji is set.
   const header = emoji ? `<strong class="${className}"><span class="chat-emoji">${emoji}</span></strong>` : `<strong class="${className}">${sender}:</strong>`;
   // If emoji-only header (function), keep just the emoji; otherwise show label followed by ':'
-  messageElement.innerHTML = `${header}${marked.parse(message)}`;
+  
+  // Check if message contains HTML (from FunctionCall with collapsible element)
+  const isHTML = sender === '🔧' && message.includes('<details>');
+  const parsedMessage = isHTML ? message : marked.parse(message);
+  
+  messageElement.innerHTML = `${header}${parsedMessage}`;
   chatDisplay.appendChild(messageElement);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
   

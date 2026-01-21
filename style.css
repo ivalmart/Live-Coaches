@@ -1,44 +1,80 @@
-canvas {
-    background: #000;
-    display: block;
-    margin: 0 auto 1em auto;
-    border-radius: 8px;
+/* Game Emulator Canvas Style*/
+canvas { /* used for adjusting the emulator screen */
+  width: 520px;
+  border: thick solid gold;
+  border-radius: 5px;
 }
-.emulator {
-    background: #222;
-    border-radius: 8px;
-    padding: 1em;
-    margin-bottom: 1em;
+.emu_style {
+  background: #222;
+  border-radius: 5px;
+  padding: 1em;
+  margin-bottom: 1em;
 }
+
 .mapping {
-    background: #78ffefff;
-    border-radius: 8px;
-    padding: 1em;
-    margin-bottom: 1em;
+  background: #78ffefff;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 1em;
 }
 .keyboard {
-    background: #444;
-    color: #fff;
-    border-radius: 3px;
-    padding: 0.1em 0.5em;
-    margin: 0 0.2em;
-    font-family: monospace;
+  background: #444;
+  color: #fff;
+  border-radius: 3px;
+  padding: 0.1em 0.5em;
+  margin: 0 0.2em;
+  font-family: monospace;
 }
+
+/* Chatbot style*/
+#message_display {
+  font-size: 16px;
+  height: 400px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  border: 1px solid #757575;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-style: solid;
+  border-width: 2px;
+  text-align: left;
+  width: 100%;
+  word-break: break-word;
+  white-space: pre-wrap;
+  background-color: #ffffff;
+  line-height: 1.2;
+}
+#message_display div {
+  margin-bottom: 4px;
+}
+.Player-name {
+  color: #9204ff;
+  font-weight: bold;
+}
+.Coach-name {
+  color: #0ad511;
+  font-weight: bold;
+}
+.FunctionCall {
+  color: #ff6b35;
+  font-weight: bold;
+}
+#user-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* default button style */
 button {
-    background: #3a6;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5em 1em;
-    cursor: pointer;
-    margin-bottom: 0.5em;
-}
-.missing {
-    color: #f66;
-    font-weight: bold;
-}
-.images {
-    display: flex;
-    gap: 2em;
-    align-items: center;
+  background: rgb(42, 186, 16);
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  margin-bottom: 0.5em;
 }

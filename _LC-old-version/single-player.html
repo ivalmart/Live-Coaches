@@ -23,7 +23,10 @@
         <!-- Game Screen Canvas-->
         <div class="column"> 
           <div id="container"></div>
-          <button class="defaultButton" id="toggleMap">Show Map</button>
+          <button class="defaultButton" id="toggleMap" style="display: none;">Show Map</button>
+          <div class="whiteboard" id="whiteboard">
+            <div id="whiteboard-map"></div>
+          </div>
         </div>
         <!-- Gemini + Player Chat Functionality -->
         <div class="column"> 
@@ -45,9 +48,6 @@
     </div>
     <p hidden id="goal">Goal</p>
  
-    <div class="whiteboard" id="whiteboard">
-      <div id="whiteboard-map" style="height: 480px; width: 100%; display: none;"></div>
-    </div>
     <div id="map" style="height: 500px; width: 100%; max-width: 1000px; background: #444;"></div>
 
     <a class="example" href="?Game=SuperMetroid" style="display: none;">Super Metroid</a>
@@ -121,7 +121,6 @@
                 const functionResponseParts = [];
                 for (let call of response.functionCalls) {
                   if (knownFunctions[call.name]) {
-                    displayMessage("FunctionCall", call.name + " " + JSON.stringify(call.args), document.getElementById("message_display"), messageHistory);
                     let result = undefined;
                     try {
                       result = await knownFunctions[call.name](call.args);
@@ -129,8 +128,19 @@
                       console.warn("Error executing function:", call.name, error);
                       result = "Error: " + error.message; // Return error message if function fails
                     }
-                     
-                    displayMessage("FunctionResults", JSON.stringify(result), document.getElementById("message_display"), messageHistory);
+
+                    let collapsibleResults = document.createElement("details");
+                    let fcTitle = document.createElement("summary");
+                    let contents = document.createElement("pre");
+                    fcTitle.textContent = call.name;
+                    contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(result);
+                    collapsibleResults.appendChild(fcTitle);
+                    collapsibleResults.appendChild(contents);
+
+                    let messageContainer = document.createElement("div");
+                    messageContainer.appendChild(collapsibleResults);
+                    displayMessage("FunctionCallResults", messageContainer.innerHTML, document.getElementById("message_display"), messageHistory);
+                    
                     functionResponseParts.push({
                       functionResponse: {
                         name: call.name,
