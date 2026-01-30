@@ -78,3 +78,12 @@ button {
   cursor: pointer;
   margin-bottom: 0.5em;
 }
+
+.emulator-section {
+  flex: 1;
+  margin-right: 20px;
+}
+
+live-coach {
+  flex: 1;
+}

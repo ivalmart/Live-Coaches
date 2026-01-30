@@ -12,15 +12,15 @@ import { marked } from "https://esm.run/marked";
 
 /* ----- Gemini Functions ----- */
 // GEMINI API: Retrieves API key from local storage on browser, otherwise prompt user to input a valid Google AI Studio API Key
-export function getApiKey() {
+export async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
   if (!apiKey) {
-    let txt_apiKey = fetch("../api_key.txt");
+    let txt_apiKey = await fetch("../api_key.txt");
 
     if(!txt_apiKey) {
       apiKey = prompt("Please enter your Gemini API key:");
     } else {
-      apiKey = txt_apiKey.text();
+      apiKey = await txt_apiKey.text();
     }
 
     if (apiKey) {

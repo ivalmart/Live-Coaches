@@ -83,12 +83,12 @@
       let itemsCollected;
 
       async function initGeminiChat() {
-        const API_KEY = getApiKey();
+        const API_KEY = await getApiKey();
         ai = new GoogleGenAI({ apiKey: API_KEY });
       
         try {
           chat = ai.chats.create({
-            model: "gemini-2.5-flash",
+            model: "gemini-3-flash-preview",
             config: {
               systemInstruction: instructions,
               tools: [{
@@ -312,11 +312,10 @@
             return bits;
           },
           async get_next_step_on_plan_to_beat_game({nodeName, itemList}) {
-            // return "Head to the right"; // placeholder value
-            let response = await fetch("http://localhost:8008/next_node", {
+            let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/next_node", {
               method: "POST",
               headers: {
-              "Content-Type": "application/json"
+                "Content-Type": "application/json"
               },
               body: JSON.stringify({ nodeName, itemList })
             });
@@ -324,8 +323,7 @@
 
           },
           async get_node_info({nodeName}) {
-            // example: http://localhost:8008/node/Parlor_R1
-            let response = await fetch("http://localhost:8008/node/" + nodeName);
+            let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
             return await response.json();
           }
           ,
