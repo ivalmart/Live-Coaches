@@ -16,8 +16,11 @@ class SnesEmulator extends HTMLElement {
 
     this.stateUrl = null;   // save state url from local assets folder (optional)
     this.stateBytes = null; // transformed bytes of loaded save state
+
+    this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
     this.render();
   }
+
   connectedCallback() {
     this.romUrl = this.getAttribute('rom-url');
     this.romName = this.getAttribute('rom-name');
@@ -26,6 +29,7 @@ class SnesEmulator extends HTMLElement {
     this.init();
   }
 
+  // First instance of SNES Emulator creation
   async init() {
     this.render();
     if (!this.romUrl) {
@@ -43,7 +47,10 @@ class SnesEmulator extends HTMLElement {
     this.setupEmulator();
     this.setupKeyboard();
     this.setupExportImport();
+    this.initPlayerState();
   }
+
+  // For handling game ROM urls
   async fetchBinary(url) {
     const res = await fetch(url);
     if (!res.ok) {
@@ -51,8 +58,9 @@ class SnesEmulator extends HTMLElement {
     }
     return new Uint8Array(await res.arrayBuffer());
   }
+
+  // Initialize emulator using the snes.mjs function
   setupEmulator() {
-    // Initialize emulator using the snes.mjs function
     this.emulator = window.emulator = emulateSnesConsole(
       this.romBytes,
       this.stateBytes,
@@ -60,8 +68,8 @@ class SnesEmulator extends HTMLElement {
     );
   }
 
+  // Keyboard mapping of SNES controller
   setupKeyboard() {
-    // Keyboard mapping of SNES controller
     this.controllerInputs = [
       { key: "l", value: "B" }, // B button, 0
       { key: "k", value: "Y" }, // Y button, 1
@@ -77,8 +85,8 @@ class SnesEmulator extends HTMLElement {
       { key: "e", value: "RightTrigger" }, // Right bumper, 11
     ];
 
-    const canvas = this.querySelector('canvas');
     // Pressing keyboard inputs
+    const canvas = this.querySelector('canvas');
     canvas.addEventListener('keydown', e => {
       // Toggle fullscreen
       if (e.key === 'f' || e.key === 'F') {
@@ -90,13 +98,14 @@ class SnesEmulator extends HTMLElement {
         e.preventDefault();
         return;
       }
-
+      // controls
       const index = this.findGameInputIndex(e.key);
       const keyState = `0,1,0,${index}`;
       if (index !== -1) {
         this.emulator.input_state[keyState] = 1;
       }
     });
+
     // Releasing keyboard inputs
     canvas.addEventListener('keyup', e => {
       const index = this.findGameInputIndex(e.key);
@@ -106,11 +115,12 @@ class SnesEmulator extends HTMLElement {
       }
     });
 
-    // Focus canvas for keyboard
+    // Focus canvas for keyboard qol
     canvas.setAttribute('tabindex', 0);
     canvas.addEventListener('click', () => canvas.focus());
   }
 
+  // Handling Load/Save state functionality
   setupExportImport() {
     // Export state
     this.querySelector('#export').onclick = () => {
@@ -121,7 +131,6 @@ class SnesEmulator extends HTMLElement {
       this.importSaveState();
     };
   }
-
   exportSaveState() {
     if (!this.emulator) {
       return;
@@ -136,7 +145,6 @@ class SnesEmulator extends HTMLElement {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
   }
-
   importSaveState() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -161,6 +169,7 @@ class SnesEmulator extends HTMLElement {
     return this.controllerInputs.findIndex((button) => button.key === key);
   }
 
+  // Handling DataView for game memory reading and manipulation
   callDataView() {
     if (!this.emulator || !this.emulator.retro) {
       return;
@@ -173,6 +182,44 @@ class SnesEmulator extends HTMLElement {
     } catch (e) {
       // Optionally handle error
     }
+  }
+
+  initPlayerState() {
+    if(this.romName == "SuperMetroid") {
+      return {
+        energy: 0,
+        missiles: 0,
+        room: "foo",
+        area: "bar",
+        inventory: 0,
+        closestNode: null
+      };
+    } else {
+      return {};
+    }
+  }
+
+  retrievePlayerState() {
+    if(this.romName == "SuperMetroid") {
+      const dv = this.callDataView();
+      return {
+        energy: dv.getUint8(0x09C2),
+        missiles: dv.getUint8(0x09C4),
+        inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
+        closestNode: null // Placeholder for future pathfinding logic
+      };
+    }
+  }
+
+  // Function to get set bits from a packed value
+  get_set_bits_from_packed_value({packed_value}) {
+    const bits = [];
+    for (let i = 0; i < 16; i++) {
+      if (packed_value & (1 << i)) {
+        bits.push(i);
+      }
+    }
+    return bits;
   }
 
   render() {

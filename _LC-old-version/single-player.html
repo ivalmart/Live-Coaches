@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Super Metroid/Live Coaches Demo</title>
-    <link rel="stylesheet" href="../LC-showcase/game-style.css" />
+    <link rel="stylesheet" href="../_LC-old-version/game-style.css" />
         <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -71,8 +71,8 @@
         initPlayerState,  // player state
         item_flags,  // item flags
         downloadGameState
-      } from "../LC-showcase/helper.js"; // helper file
-      import functionDeclarations from "../LC-showcase/function-declarations.json" with { "type": "json" }
+      } from "../_LC-old-version/helper.js"; // helper file
+      import functionDeclarations from "../_LC-old-version/function-declarations.json" with { "type": "json" }
       
       /* -------------------- Gemini Code -------------------- */
       let ai;
@@ -109,7 +109,7 @@
           }
             
           try {
-            return; // holding off Gemini responses for now
+            // return; // holding off Gemini responses for now
             let response = await chat.sendMessage({
               message: `from=${message.from.toLowerCase()}\n` + message.text,
             });
