@@ -18,10 +18,11 @@ class SnesEmulator extends HTMLElement {
     this.stateBytes = null; // transformed bytes of loaded save state
 
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
-    this.render();
   }
 
+  // called each time component is added onto document
   connectedCallback() {
+    console.log("where is this called");
     this.romUrl = this.getAttribute('rom-url');
     this.romName = this.getAttribute('rom-name');
 
@@ -29,7 +30,7 @@ class SnesEmulator extends HTMLElement {
     this.init();
   }
 
-  // First instance of SNES Emulator creation
+  // ----- First instance of SNES Emulator creation -----
   async init() {
     this.render();
     if (!this.romUrl) {
@@ -68,7 +69,7 @@ class SnesEmulator extends HTMLElement {
     );
   }
 
-  // Keyboard mapping of SNES controller
+  // ----- Keyboard mapping of SNES controller -----
   setupKeyboard() {
     this.controllerInputs = [
       { key: "l", value: "B" }, // B button, 0
@@ -119,8 +120,12 @@ class SnesEmulator extends HTMLElement {
     canvas.setAttribute('tabindex', 0);
     canvas.addEventListener('click', () => canvas.focus());
   }
+  // Helper function to find index of controller input based on keyboard input
+  findGameInputIndex(key) {
+    return this.controllerInputs.findIndex((button) => button.key === key);
+  }
 
-  // Handling Load/Save state functionality
+  // ----- Handling Load/Save state functionality -----
   setupExportImport() {
     // Export state
     this.querySelector('#export').onclick = () => {
@@ -164,11 +169,6 @@ class SnesEmulator extends HTMLElement {
     input.click();
   }
 
-  // Helper function to find index of controller input based on keyboard input
-  findGameInputIndex(key) {
-    return this.controllerInputs.findIndex((button) => button.key === key);
-  }
-
   // Handling DataView for game memory reading and manipulation
   callDataView() {
     if (!this.emulator || !this.emulator.retro) {
@@ -184,6 +184,8 @@ class SnesEmulator extends HTMLElement {
     }
   }
 
+  // ----- Player State Functionality -----
+  // first instance
   initPlayerState() {
     if(this.romName == "SuperMetroid") {
       return {
@@ -198,7 +200,7 @@ class SnesEmulator extends HTMLElement {
       return {};
     }
   }
-
+  // retrieve the current player state
   retrievePlayerState() {
     if(this.romName == "SuperMetroid") {
       const dv = this.callDataView();
@@ -222,6 +224,7 @@ class SnesEmulator extends HTMLElement {
     return bits;
   }
 
+  // ----- HTML Structure of SNES-Emulator web component -----
   render() {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>

@@ -27,19 +27,21 @@ class LiveCoach extends HTMLElement {
 
   constructor() {
     super();
+    // Chat variables
     this._ai = null;
     this._chat = null;
     this._instructions = "";
     this.history = [];
 
+    // Specific game variables
     this.gameName = "";
     this.gamePrompt = "";
     // this._gameState = null;
     this.geminiInit = false;
     // this.functionCalls = null;
-    this.render();
   }
 
+  // called each time component is added onto document
   connectedCallback() {
     this.gameName = this.getAttribute('game-name');
     this.initLiveCoach();
@@ -136,8 +138,10 @@ class LiveCoach extends HTMLElement {
     //   //     }
     //   //   }
     // };
-    const emulator = document.querySelector('snes-emulator');
-    emulator.exportSaveState();
+
+    // test run: to show if we can get the live coach to read from another web component
+    // const emulator = document.querySelector('snes-emulator');
+    // emulator.exportSaveState();
   }
 
   // Prompt Retrieval Concatenation
@@ -182,9 +186,9 @@ class LiveCoach extends HTMLElement {
       } else if (sender === 'Coach') {
         className = 'Coach-name';
         emoji = '';
-      // } else if (sender === "FunctionCallResults") {
-      //   className = 'FunctionCall';
-      //   sender = '🔧';
+      } else if (sender === "FunctionCallResults") {
+        className = 'FunctionCall';
+        sender = '🔧';
       }
 
       const messageElement = document.createElement("div");
