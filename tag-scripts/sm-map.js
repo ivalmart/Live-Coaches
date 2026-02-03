@@ -25,12 +25,13 @@ class SuperMetroidMap extends HTMLElement {
   // called each time component is added onto document
   connectedCallback() {
     this.emulatorReference = document.querySelector('snes-emulator');
+    this.render();
     this.initMap();
   }
 
   initMap() {
     // const map = window
-    const map = L.map('sm-map', {
+    const map = L.map(this.querySelector('#sm-map'), {
       maxBounds: maxBounds,
       crs: L.CRS.Simple,
     }).fitBounds(bounds);
@@ -62,10 +63,11 @@ class SuperMetroidMap extends HTMLElement {
     }).addTo(map);
 
     // Constant updates
-    setInterval(() => update_pos(this.player), 100);
-    setInterval(() => adjacentNodeDetection(this.player), 1000); 
-    this.emulatorReference.addEventListener('updateRun', () => this.update());
-    this.render();
+    setInterval(() => {
+      this.update();
+      update_pos(this.player);
+    }, 100);
+    setInterval(() => adjacentNodeDetection(this.player), 1000);
   }
 
   // constantly updating player position
@@ -73,14 +75,13 @@ class SuperMetroidMap extends HTMLElement {
     if (!this.emulatorReference) {
       return;
     }
-    const dv = callDataView();
-    this.player.x = dv.getUint16(0x09A2, true);
-    this.player.y = dv.getUint16(0x09A4, true);
+    let dv = this.emulatorReference.callDataView();
+    this.player.x = dv.getUint8(0x09A2, true);
+    this.player.y = dv.getUint8(0x09A4, true);
     
-    const coords = abstractify_pos_global(this.player.x, this.player.y);
+    const coords = abstractify_pos_global(dv);
     this.player.x = coords[0], this.player.y = coords[1];
   }
-
 
   render() {
     this.innerHTML = `

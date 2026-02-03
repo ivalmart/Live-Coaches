@@ -1,7 +1,6 @@
 import all_rooms from "../SNES9x-framework/all_rooms.json" with { type: "json" };
 import all_nodes from "../SNES9x-framework/all_nodes.json" with { type: "json" };
 
-
 export const map_area_names = {
   0: "Crateria",
   1: "Brinstar",
@@ -12,7 +11,6 @@ export const map_area_names = {
   6: "Ceres",
   7: "Debug",
 };
-
 export const map_area_offsets = {
   0: [3, 10],
   1: [0, 28],
@@ -24,7 +22,6 @@ export const map_area_offsets = {
   6: [0, -10],
   7: [0, 0],
 };
-
 export const crateria2_offset = [7, 0];
 export const crateria2_rooms = [
   "East_Ocean",
@@ -66,7 +63,6 @@ export const maxBounds = [
 ];
 
 // ----- MAP FUNCTIONS (alphabetical) -----
-
 function abstractify_pos(dv) {  
   const x_radius = dv.getInt16(0x0afe, true);
   const y_radius = dv.getInt16(0x0b00, true);
@@ -77,10 +73,10 @@ function abstractify_pos(dv) {
   return [left, top];
 }
 
-export function abstractify_pos_global(dv, map_area_offsets) {
+export function abstractify_pos_global(dv, m_area_offsets = map_area_offsets) {
   // Area pos
   const area_index = dv.getUint8(0x079F);
-  const aoffset = map_area_offsets[area_index];
+  const aoffset = m_area_offsets[area_index];
   const area_pos = [16 * aoffset[0], 16 * aoffset[1]];
   // Map pos
   const map_x = dv.getUint8(0x07A1);
