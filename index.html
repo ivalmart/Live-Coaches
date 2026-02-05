@@ -44,10 +44,21 @@
 
     <!-- Main Script -->
     <script type="module">
-      window.saveGameState = function() {
+      window.save_game_state = function() {
         const emulator = document.querySelector('snes-emulator');
         emulator.exportSaveState();
       }
+
+      window.send_message = function(text) {
+        const liveCoach = document.querySelector('live-coach');
+        liveCoach.sendChatMessage({ to: "Coach", from: "Player", text: ""+text });
+      }
+
+      window.download_transcript = function() {
+        const liveCoach = document.querySelector('live-coach');
+        liveCoach.downloadChatTranscript();
+      }
+
     </script>
   </body>
 </html>

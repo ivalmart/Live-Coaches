@@ -1,13 +1,17 @@
 import { GoogleGenAI } from "https://esm.run/@google/genai";
 import { marked } from "https://esm.run/marked";
+import FUNCTION_DECLARATIONS from "../assets/function-declarations.json" with { "type": "json" }
+
 
 // API Key Retrieval
 async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
+  apiKey = null;
+  
   if (!apiKey) {
     let txt_apiKey = await fetch("../api_key.txt");
 
-    if(!txt_apiKey) {
+    if (!txt_apiKey) {
       apiKey = prompt("Please enter your Gemini API key:");
     } else {
       apiKey = await txt_apiKey.text();
@@ -47,7 +51,6 @@ class LiveCoach extends HTMLElement {
     this.initLiveCoach();
   }
 
-  // First instance of creating the Live Coach
   async initLiveCoach() {
     this.render();
     await this.initCoachGamePrompt();
@@ -63,71 +66,71 @@ class LiveCoach extends HTMLElement {
         model: "gemini-3-flash-preview",
         config: {
           systemInstruction: this._instructions,
-            thinkingConfig: {
-                thinkingLevel: "MINIMAL",
-            }
+          tools: [{
+            functionDeclarations: FUNCTION_DECLARATIONS
+          }],
+          thinkingConfig: {
+              thinkingLevel: "MINIMAL",
+          }
         }
       });
       this.geminiInit = true;
+
     } catch (error) {
       console.warn(error);
     }
 
-    // this.functionCalls = {
-    //     set_energy_level({level}) {
-    //         const dv = document.querySelector('snes-emulator').callDataView();
-    //         dv.setUint8(0x09C2, level);
-    //         return dv.getUint8(0x09C2);
-    //     },
-    //     get_player_state() {
-    //       const state = getCurrentPlayerState(dv);
-    //       return JSON.stringify(state);
-    //     },
-    //     save_to_slot({slot_index}) {
-    //       saveSlots[slot_index] = emulator.retro.serialize().slice();
-    //       return "Done.";
-    //     },
-    //     load_from_slot({slot_index}) {
-    //       try {
-    //         emulator.retro.unserialize(saveSlots[slot_index]);
-    //         return "Done.";
-    //       } catch (error) {
-    //         return "Error: " + error;
-    //       }
-    //     },
-    //     evaluate_js_with_confirmation({code}) {
-    //       if (confirm("Allow running this code?\n\n"+code)) {
-    //         return "Code execution result: "+ eval(code);
-    //       } else {
-    //         return "The user disallowed this code execution.";
-    //       }
-    //     },
-    //     get_set_bits_from_packed_value({packed_value}) {
-    //       // Function to get set bits from a packed value
-    //       const bits = [];
-    //       for (let i = 0; i < 16; i++) {
-    //         if (packed_value & (1 << i)) {
-    //           bits.push(i);
-    //         }
-    //       }
-    //       return bits;
-    //     },
-    //     async get_next_step_on_plan_to_beat_game({nodeName, itemList}) {
-    //       // return "Head to the right"; // placeholder value
-    //       let response = await fetch("http://localhost:8008/next_node", {
-    //         method: "POST",
-    //         headers: {
-    //         "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify({ nodeName, itemList })
-    //       });
-    //       return await response.json();
-    //     },
-    //     async get_node_info({nodeName}) {
-    //       // example: http://localhost:8008/node/Parlor_R1
-    //       let response = await fetch("http://localhost:8008/node/" + nodeName);
-    //       return await response.json();
-    //     }
+    this.functionCallTools = {
+      set_energy_level({level}) {
+          const dv = document.querySelector('snes-emulator').callDataView();
+          dv.setUint8(0x09C2, level);
+          return dv.getUint8(0x09C2);
+      },
+      get_player_state() {
+        const state = document.querySelector('snes-emulator').retrievePlayerState();
+        return JSON.stringify(state);
+      },
+      save_to_slot({slot_index}) {
+        const emulator = document.querySelector('snes-emulator');
+        emulator.SAVE_SLOTS[slot_index] = emulator.retro.serialize().slice();
+        return "Done.";
+      },
+      load_from_slot({slot_index}) {
+        try {
+          const emulator = document.querySelector('snes-emulator');
+          emulator.retro.unserialize(emulator.SAVE_SLOTS[slot_index]);
+          return "Done.";
+        } catch (error) {
+          return "Error: " + error;
+        }
+      },
+      evaluate_js_with_confirmation({code}) {
+        if (confirm("Allow running this code?\n\n"+code)) {
+          return "Code execution result: "+ eval(code);
+        } else {
+          return "The user disallowed this code execution.";
+        }
+      },
+      get_set_bits_from_packed_value({packed_value}) {
+        // RELIANT ON SNES EMULATOR ELEMENT
+        return document.querySelector('snes-emulator').get_set_bits_from_packed_value({packed_value});
+      },
+      async get_next_step_on_plan_to_beat_game({nodeName, itemList}) {
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/next_node", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ nodeName, itemList })
+        });
+        return await response.json();
+
+      },
+      async get_node_info({nodeName}) {
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
+        return await response.json();
+      }
+    };
     //   //   ,
     //   //   set_whiteboard_content({msg}) {
     //   //     try {
@@ -138,10 +141,6 @@ class LiveCoach extends HTMLElement {
     //   //     }
     //   //   }
     // };
-
-    // test run: to show if we can get the live coach to read from another web component
-    // const emulator = document.querySelector('snes-emulator');
-    // emulator.exportSaveState();
   }
 
   // Prompt Retrieval Concatenation
@@ -160,12 +159,58 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
 
-        this.displayMessage("Coach", response.text, this.querySelector("#message_display"));
+        if(!response.functionCalls) {
+          this.displayMessage("Coach", response.text, this.querySelector("#message_display"));
+        } else {
+          while(response.functionCalls) {
+            const functionResponseParts = [];
+            for (let call of response.functionCalls) {
+              if (this.functionCallTools[call.name]) {
+                let result = undefined;
+                try {
+                  result = await this.functionCallTools[call.name](call.args);
+                } catch (error) {
+                  console.warn("Error executing function call:", call.name, error);
+                  result = "Error: " + error.message; // Return error message if function fails
+                }
+
+                // Creating collapsible element only for function call results (qol)
+                let collapsibleResults = document.createElement("details");
+                let fc_Title = document.createElement("summary");
+                let contents = document.createElement("pre");
+                fc_Title.textContent = call.name;
+                contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(result);
+                collapsibleResults.appendChild(fc_Title);
+                collapsibleResults.appendChild(contents);
+
+                let messageContainer = document.createElement("div");
+                messageContainer.appendChild(collapsibleResults);
+                this.displayMessage("FunctionCallResults", messageContainer.innerHTML, this.querySelector("#message_display"));
+
+                functionResponseParts.push({
+                  functionResponse: {
+                    name: call.name,
+                    response: { text: result}
+                  },
+                });
+              }
+            }
+
+            if (functionResponseParts) {
+              response = await this._chat.sendMessage({
+                message: JSON.stringify(functionResponseParts),
+              });
+
+              this.displayMessage("Coach", response.text, this.querySelector("#message_display"));
+            }
+          }
+        }
+
       } catch (error) {
         console.warn("Error sending message:", error);
         this.displayMessage("ErrorSystem", "Sorry, there was an error processing your message.", this.querySelector("#message_display"));
@@ -196,8 +241,8 @@ class LiveCoach extends HTMLElement {
       const header = emoji ? `<strong class="${className}"><span class="chat-emoji">${emoji}</span></strong>` : `<strong class="${className}">${sender}:</strong>`;
 
       // Check if message contains HTML (from FunctionCall with collapsible element)
-      // const isHTML = sender === '🔧' && message.includes('<details>');
-      const parsedMessage = marked.parse(message);
+      const isHTML = sender === '🔧' && message.includes('<details>');
+      const parsedMessage = isHTML ? message : marked.parse(message);
 
       messageElement.innerHTML = `${header}${parsedMessage}`;
       chatElement.appendChild(messageElement);
@@ -205,6 +250,22 @@ class LiveCoach extends HTMLElement {
 
       this.history.push({ from: sender, text: message });
     }
+  }
+
+  downloadTranscript() {
+    const filename = "transcript.json";
+    const transcriptContent = JSON.stringify(this.history);
+    let element = document.createElement("a");
+    element.setAttribute(
+      "href",
+      "data:text/plain;charset=utf-8," +
+        encodeURIComponent(transcriptContent)
+    );
+    element.setAttribute("download", filename);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   }
 
   // Inner HTML for individual web component

@@ -31,7 +31,7 @@ export const crateria2_rooms = [
   "Crateria_Maridia_Shaft",
 ];
 
-// Base leaflet map
+// Base leaflet map parameters
 const base = {
   width: 18432, // pixels
   height: 16896, // pixels
@@ -119,7 +119,6 @@ export function adjacentNodeDetection(player) {
   }
 }
 
-// Returns the calculation values for Samus's positions within the game map created by Ross
 export function calculate_samus_pos(dv) {
   let x = dv.getUint8(0x0b04);
   let y = dv.getUint8(0x0b06);  
@@ -191,34 +190,19 @@ function mk_node_circle(player, map, node_name) {
     // Store for proximity checking
     player.nodeList.push({ circ, loc, name: node_name }
   );
-
-  //TODO: add click callback to write goal.json
-  // circ.bindTooltip(
-  //   `${node_name.replaceAll("_", " ")}`
-  // );
-  // circ.on('click', (event) => {
-  //   fetch(node_name); // Will Fail!
-  //   document.getElementById("goal").innerHTML = node_name;
-  // });
 }
 
 export function mk_all_node_circles(player, map) {
   Object.keys(all_nodes).forEach(node_name => mk_node_circle(player, map, node_name));
 }
 
-// Convert from pixel xy coords to the map coords
-// which expects y,x degrees
+// Convert from pixel xy coords to the map coords, which expects y,x degrees
 function pxy_to_loc(pxy) {
   return [
     (base.offsetY + base.height - pxy[1]) / base.pixelsPerDegree,
     (base.offsetX + pxy[0]) / base.pixelsPerDegree,
   ];
 }
-
-// was in original code from Ross, idk what it does now
-// function pos_list_to_loc(pos_list) {
-//   return pos_list.map(pos_to_loc)
-// }
 
 export function pos_to_loc(pos) {
   return pxy_to_loc([pos[0] * 16, pos[1] * 16])

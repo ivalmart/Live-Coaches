@@ -30,7 +30,6 @@ class SuperMetroidMap extends HTMLElement {
   }
 
   initMap() {
-    // const map = window
     const map = L.map(this.querySelector('#sm-map'), {
       maxBounds: maxBounds,
       crs: L.CRS.Simple,
@@ -70,7 +69,6 @@ class SuperMetroidMap extends HTMLElement {
     setInterval(() => adjacentNodeDetection(this.player), 1000);
   }
 
-  // constantly updating player position
   update() {
     if (!this.emulatorReference) {
       return;
@@ -81,6 +79,7 @@ class SuperMetroidMap extends HTMLElement {
     
     const coords = abstractify_pos_global(dv);
     this.player.x = coords[0], this.player.y = coords[1];
+    document.querySelector('snes-emulator').updatePlayerState();
   }
 
   render() {

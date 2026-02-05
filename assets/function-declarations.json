@@ -1,0 +1,131 @@
+[
+  {
+    "name": "set_energy_level",
+    "description": "set the player character Samus' health level to a specific value",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "number",
+          "description": "integer between 0 and 99"
+        }
+      },
+      "required": ["level"]
+    }
+  },
+  {
+    "name": "get_player_state",
+    "description": "Gets the current state of the game (e.g. energy/HP, missiles/ammo, location/room/zone).",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "save_to_slot",
+    "description": "saves the current state of the game emulator to the numbered slot index (it is a good idea to save the state of the game when the player makes important progress like collecting an item or leaving the first room)",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "slot_index": {
+          "type": "number",
+          "description": "integer between 0 and 9 (1 is a good default to use)"
+        }
+      },
+      "required": ["slot_index"]
+    }
+  },
+  {
+    "name": "load_from_slot",
+    "description": "loads the state the state of the game emulator from the previously saved slot index",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "slot_index": {
+          "type": "number",
+          "description": "integer between 0 and 9 (0 is a special slot for the start of the game)"
+        }
+      },
+      "required": ["slot_index"]
+    }
+  },
+  {
+    "name": "evaluate_js_with_confirmation",
+    "description": "runs javascript code in the context of the emulator's page (after prompting the user to confirm in a dialog box) -- use this powerful feature to do on-the-fly customizations of the UI",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "arbitrary JavaScript (exciting!)"
+        }
+      },
+      "required": ["code"]
+    }
+  },
+  {
+    "name": "get_set_bits_from_packed_value",
+    "description": "returns the indexes of the 1 bits in a packed integer value (e.g. 0b00001111 -> [0, 1, 2, 3])",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "packed_value": {
+          "type": "number",
+          "description": "an integer value to unpack"
+        }
+      },
+      "required": ["packed_value"]
+    }
+  },
+  {
+    "name": "get_next_step_on_plan_to_beat_game",
+    "description": "returns the next step in the plan to beat the game based on the provided state by calling a planner system",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "the name of the node to start from (e.g. 'Landing_Site_L2'). Node name combines a node name and a location within it. If the player's current closest node is null, instruct them to approach a door"
+        },
+        "itemList": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "description": "a list of items that the player currently has (e.g. [0, 2, 3])"
+          },
+          "description": "the items the player currently has"
+        }
+      },
+      "required": ["nodeName", "itemList"]
+    }
+  },
+  {
+    "name": "get_node_info",
+    "description": "returns information about a specific node in the game (x positive goes to the right, y positive goes down). Use this tool to give the player a sense of the relative position of any nodes you name",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "the name of the node to get information about (e.g. 'Landing_Site_L2')"
+        }
+      },
+      "required": ["nodeName"]
+    }
+  },
+  {
+    "name": "set_whiteboard_content",
+    "description": "Place visual content into the whiteboard area. Content such as text, images, or a map should be embedded into the board area. Use this to show visual diagrams, screenshots, list of goals or a focused map view.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "msg": {
+          "type": "string",
+          "description": "Content to place on the whiteboard. Use 'map' or 'show map' to render a map centered on the player, a full https://... image URL to embed an image, or Markdown/HTML text to render formatted content."
+        }
+      },
+      "required": ["msg"]
+    }
+  }
+]

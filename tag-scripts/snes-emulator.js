@@ -18,11 +18,11 @@ class SnesEmulator extends HTMLElement {
     this.stateBytes = null; // transformed bytes of loaded save state
 
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
+    this.SAVE_SLOTS = new Array(10); // 10 save slots by default, will preload 4-9
   }
 
   // called each time component is added onto document
   connectedCallback() {
-    console.log("where is this called");
     this.romUrl = this.getAttribute('rom-url');
     this.romName = this.getAttribute('rom-name');
 
@@ -36,32 +36,28 @@ class SnesEmulator extends HTMLElement {
     if (!this.romUrl) {
       return;
     }
-    // Load ROM and currently passed save state
-    this.romBytes = await this.fetchBinary(this.romUrl);
+
+    this.romBytes = await this.loadBinary(this.romUrl);
     try {
-      this.stateBytes = this.stateUrl ? await this.fetchBinary(this.stateUrl) : null;
+      this.stateBytes = this.stateUrl ? await this.loadBinary(this.stateUrl) : null;
     } catch (e) {
       this.stateBytes = null;
     }
 
-    // Initialize emulator w/ emulator functionality and controls
-    this.setupEmulator();
-    this.setupKeyboard();
-    this.setupExportImport();
-    this.initPlayerState();
+    this.initEmulator();
+    this.initKeyboard();
+    this.initExportImport();
+    await this.initSaveStates();
+    this.playerState = this.retrievePlayerState();
   }
 
-  // For handling game ROM urls
-  async fetchBinary(url) {
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error('Failed to fetch ' + url);
-    }
-    return new Uint8Array(await res.arrayBuffer());
+  async loadBinary(url) {
+    let response = await fetch(url);
+    return new Uint8Array(await response.arrayBuffer());
   }
 
-  // Initialize emulator using the snes.mjs function
-  setupEmulator() {
+  // Initialize emulator using snes.mjs functions
+  initEmulator() {
     this.emulator = window.emulator = emulateSnesConsole(
       this.romBytes,
       this.stateBytes,
@@ -70,7 +66,7 @@ class SnesEmulator extends HTMLElement {
   }
 
   // ----- Keyboard mapping of SNES controller -----
-  setupKeyboard() {
+  initKeyboard() {
     this.controllerInputs = [
       { key: "l", value: "B" }, // B button, 0
       { key: "k", value: "Y" }, // Y button, 1
@@ -86,10 +82,9 @@ class SnesEmulator extends HTMLElement {
       { key: "e", value: "RightTrigger" }, // Right bumper, 11
     ];
 
-    // Pressing keyboard inputs
+    // Pressing keyboard events
     const canvas = this.querySelector('canvas');
     canvas.addEventListener('keydown', e => {
-      // Toggle fullscreen
       if (e.key === 'f' || e.key === 'F') {
         if (!document.fullscreenElement) {
           canvas.requestFullscreen();
@@ -99,7 +94,7 @@ class SnesEmulator extends HTMLElement {
         e.preventDefault();
         return;
       }
-      // controls
+      // overall game controls
       const index = this.findGameInputIndex(e.key);
       const keyState = `0,1,0,${index}`;
       if (index !== -1) {
@@ -107,7 +102,7 @@ class SnesEmulator extends HTMLElement {
       }
     });
 
-    // Releasing keyboard inputs
+    // Releasing keyboard events
     canvas.addEventListener('keyup', e => {
       const index = this.findGameInputIndex(e.key);
       const keyState = `0,1,0,${index}`;
@@ -126,7 +121,7 @@ class SnesEmulator extends HTMLElement {
   }
 
   // ----- Handling Load/Save state functionality -----
-  setupExportImport() {
+  initExportImport() {
     // Export state
     this.querySelector('#export').onclick = () => {
       this.exportSaveState();
@@ -169,6 +164,27 @@ class SnesEmulator extends HTMLElement {
     input.click();
   }
 
+  async initSaveStates() {
+    this.SAVE_SLOTS[4] = await this.loadBinary(
+      "../assets/sm_save_states/nextdoor-saveroom.state"
+    );
+    this.SAVE_SLOTS[5] = await this.loadBinary(
+      "../assets/sm_save_states/pre-morphball.state"
+    );
+    this.SAVE_SLOTS[6] = await this.loadBinary(
+      "../assets/sm_save_states/beginning_ship.state"
+    );
+    this.SAVE_SLOTS[7] = await this.loadBinary(
+      "../assets/sm_save_states/morph_ball_achieved.state"
+    );
+    this.SAVE_SLOTS[8] = await this.loadBinary(
+      "../assets/sm_save_states/missiles_achieved.state"
+    );
+    this.SAVE_SLOTS[9] = await this.loadBinary(
+      "../assets/sm_save_states/enemy_encounter.state"
+    );
+  }
+
   // Handling DataView for game memory reading and manipulation
   callDataView() {
     if (!this.emulator || !this.emulator.retro) {
@@ -185,35 +201,28 @@ class SnesEmulator extends HTMLElement {
   }
 
   // ----- Player State Functionality -----
-  // first instance
-  initPlayerState() {
-    if(this.romName == "SuperMetroid") {
-      return {
-        energy: 0,
-        missiles: 0,
-        room: "foo",
-        area: "bar",
-        inventory: 0,
-        closestNode: null
-      };
-    } else {
-      return {};
-    }
-  }
-  // retrieve the current player state
   retrievePlayerState() {
     if(this.romName == "SuperMetroid") {
       const dv = this.callDataView();
+      const map_closestNode = document.querySelector('sm-map').player.closestNode;
+      // const smMapEl = document.querySelector('sm-map');
+      // const map_closestNode = smMapEl && smMapEl.player ? smMapEl.player.closestNode : null;
       return {
         energy: dv.getUint8(0x09C2),
         missiles: dv.getUint8(0x09C4),
         inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
-        closestNode: null // Placeholder for future pathfinding logic
+        closestNode: map_closestNode
       };
     }
   }
+  updatePlayerState() {
+    const newState = this.retrievePlayerState();
+    if( JSON.stringify(newState) !== JSON.stringify(this.playerState) ) {
+      this.playerState = newState;
+      document.querySelector('live-coach').sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
+    }
+  }
 
-  // Function to get set bits from a packed value
   get_set_bits_from_packed_value({packed_value}) {
     const bits = [];
     for (let i = 0; i < 16; i++) {
