@@ -17,7 +17,7 @@ class SuperMetroidMap extends HTMLElement {
       marker: null, // pink circle indicator on map to show player
       range: null, // white circle indicator to show player range
       nodeList: [], // list of associated nodes within range
-      closestNode: "Landing_Site_Ship" // closest node to player
+      closestNode: null // closest node to player
     };
     this.emulatorReference = null; 
   }
