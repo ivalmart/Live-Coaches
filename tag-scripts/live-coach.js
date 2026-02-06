@@ -62,7 +62,7 @@ class LiveCoach extends HTMLElement {
     this._ai = new GoogleGenAI({ apiKey: API_KEY });
 
     try {
-      this._chat = this._ai.chats.create({
+      this._chat = await this._ai.chats.create({
         model: "gemini-3-flash-preview",
         config: {
           systemInstruction: this._instructions,
@@ -90,6 +90,7 @@ class LiveCoach extends HTMLElement {
         const state = document.querySelector('snes-emulator').retrievePlayerState();
         return JSON.stringify(state);
       },
+      // emulator.retro is not working at the moment as it is not initialized
       save_to_slot({slot_index}) {
         const emulator = document.querySelector('snes-emulator');
         emulator.SAVE_SLOTS[slot_index] = emulator.retro.serialize().slice();

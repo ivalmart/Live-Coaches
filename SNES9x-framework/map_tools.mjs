@@ -187,6 +187,7 @@ function mk_node_circle(player, map, node_name) {
   const loc = pos_to_loc(pos)
   const circ = L.circle(loc, {
     radius: 0.2}).addTo(map);
+  circ.bindTooltip(node_name.replaceAll("_", " "));
     // Store for proximity checking
     player.nodeList.push({ circ, loc, name: node_name }
   );

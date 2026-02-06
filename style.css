@@ -28,21 +28,22 @@ canvas { /* used for adjusting the emulator screen */
 
 /* Chatbot style*/
 #message_display {
-  font-size: 16px;
+  font-size: 12px;
   height: 400px;
   overflow-y: scroll;
-  overflow-x: hidden;
+  overflow-x: auto;
   border: 1px solid #757575;
   padding: 8px;
   margin-bottom: 10px;
   border-style: solid;
   border-width: 2px;
   text-align: left;
-  width: 100%;
+  width: 320px;
   word-break: break-word;
   white-space: pre-wrap;
   background-color: #ffffff;
   line-height: 1.2;
+  box-sizing: border-box;
 }
 #message_display div {
   margin-bottom: 4px;
@@ -60,11 +61,12 @@ canvas { /* used for adjusting the emulator screen */
   font-weight: bold;
 }
 #user-input {
-  width: 100%;
+  width: 320px;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 11px;
+  box-sizing: border-box;
 }
 
 /* default button style */
@@ -85,5 +87,8 @@ button {
 }
 
 live-coach {
-  flex: 1;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
