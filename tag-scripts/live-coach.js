@@ -116,16 +116,23 @@ class LiveCoach extends HTMLElement {
         // RELIANT ON SNES EMULATOR ELEMENT
         return document.querySelector('snes-emulator').get_set_bits_from_packed_value({packed_value});
       },
-      async get_next_step_on_plan_to_beat_game({nodeName, itemList}) {
-        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/next_node", {
+      async get_route_to_goal({nodeName, itemList, goalNode}) {
+        const requestBody = { nodeName, itemList };
+        if (goalNode) requestBody.goalNode = goalNode;
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/full_route", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ nodeName, itemList })
+          body: JSON.stringify(requestBody)
         });
-        return await response.json();
-
+        const data = await response.json();
+        // Trim the verbose remaining_path to just a step count
+        if (data.path && data.path.remaining_path) {
+          const stepCount = data.path.remaining_path.length;
+          data.path.remaining_path = `(${stepCount} more steps in the remaining path)`;
+        }
+        return data;
       },
       async get_node_info({nodeName}) {
         let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
@@ -154,6 +161,10 @@ class LiveCoach extends HTMLElement {
 
   // Sending Chat Message Functionality
   async sendChatMessage(message) {
+    if (!this._chat) {
+      console.warn("Tried to send message before chat was initialized:", message);
+      return; // Chat not initialized yet
+    }
     if (message) {
       if (message.from == "Player" || message.from == "Coach") {
         this.displayMessage(message.from, message.text, this.querySelector("#message_display"));

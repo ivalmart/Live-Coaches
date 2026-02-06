@@ -79,14 +79,14 @@
     }
   },
   {
-    "name": "get_next_step_on_plan_to_beat_game",
-    "description": "returns the next step in the plan to beat the game based on the provided state by calling a planner system",
+    "name": "get_route_to_goal",
+    "description": "returns a full route from the player's current node to a goal node, including the next step and the complete path. Use this to help the player navigate to any destination in the game, not just the end. Returns success status, a message, the next node to visit, and the full path.",
     "parameters": {
       "type": "object",
       "properties": {
         "nodeName": {
           "type": "string",
-          "description": "the name of the node to start from (e.g. 'Landing_Site_L2'). Node name combines a node name and a location within it. If the player's current closest node is null, instruct them to approach a door"
+          "description": "the name of the node to start from (e.g. 'Landing_Site_L2'). Node name combines a room name and a location within it. If the player's current closest node is null, instruct them to approach a door"
         },
         "itemList": {
           "type": "array",
@@ -95,9 +95,13 @@
             "description": "a list of items that the player currently has (e.g. [0, 2, 3])"
           },
           "description": "the items the player currently has"
+        },
+        "goalNode": {
+          "type": "string",
+          "description": "the name of the destination node to route to (e.g. 'Morph_Ball_Room_L1', 'Bomb_Torizo_Room_L1'). Defaults to 'Landing_Site_End' (beat the game) if not specified. Use this to route the player toward any specific item, boss, or area."
         }
       },
-      "required": ["nodeName", "itemList"]
+      "required": ["nodeName", "itemList", "goalNode"]
     }
   },
   {
