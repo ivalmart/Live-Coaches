@@ -137,18 +137,18 @@ class LiveCoach extends HTMLElement {
       async get_node_info({nodeName}) {
         let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
         return await response.json();
+      },
+      set_whiteboard_content({msg}) {
+        try {
+          const whiteboard = document.querySelector('coach-whiteboard');
+          if (!whiteboard) return "Error: no <coach-whiteboard> element found on page.";
+          whiteboard.setContent(msg);
+          return "Done.";
+        } catch (e) {
+          return "Error: " + (e && e.message ? e.message : e);
+        }
       }
     };
-    //   //   ,
-    //   //   set_whiteboard_content({msg}) {
-    //   //     try {
-    //   //       setWhiteboardContent(msg);
-    //   //       return "Done.";
-    //   //     } catch (e) {
-    //   //       return "Error: " + (e && e.message ? e.message : e);
-    //   //     }
-    //   //   }
-    // };
   }
 
   // Prompt Retrieval Concatenation

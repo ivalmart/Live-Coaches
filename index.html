@@ -23,6 +23,7 @@
     <script type="module" src="../tag-scripts/controller-mapping.js"></script>
     <script type="module" src="../tag-scripts/live-coach.js"></script>
     <script type="module" src="../tag-scripts/sm-map.js"></script>
+    <script type="module" src="../tag-scripts/coach-whiteboard.js"></script>
 
     <main>
       <div style="max-width: 1200px; margin: 24px auto; text-align: center;">
@@ -34,11 +35,12 @@
               rom-name="SuperMetroid"
               state-url="../assets/sm_save_states/missiles_achieved.state">
             </snes-emulator>
-            <controller-mapping></controller-mapping>
+            <controller-mapping style="display: none;"></controller-mapping>
+            <coach-whiteboard></coach-whiteboard>
           </div>
           <live-coach game-name="SuperMetroid"></live-coach>
         </div>
-        <sm-map></sm-map>
+        <sm-map style="display: none;"></sm-map>
       </div>
     </main>
 

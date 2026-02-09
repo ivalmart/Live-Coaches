@@ -92,3 +92,41 @@ live-coach {
   flex-direction: column;
   align-items: flex-start;
 }
+
+/* EVEYRTHING BELOW IS GENERATED*/
+
+/* Whiteboard component */
+coach-whiteboard {
+  display: block;
+  width: 100%;
+}
+
+.whiteboard {
+  height: 300px;
+  width: 100%;
+  background: #ffffff;
+  color: #000;
+  overflow: auto;
+  padding: 10px;
+  border: 3px solid #333;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.whiteboard img {
+  max-width: 100%;
+  height: auto;
+}
+
+.whiteboard-placeholder {
+  opacity: 0.45;
+  font-style: italic;
+  text-align: center;
+  margin-top: 1em;
+}
+
+#whiteboard-map {
+  width: 100%;
+  height: 100%;
+}
