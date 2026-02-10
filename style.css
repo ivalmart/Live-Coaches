@@ -86,6 +86,52 @@ button {
   margin-right: 20px;
 }
 
+/* Ablation Study Toggle Controls */
+#ablation-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  border: 2px solid #444;
+  border-radius: 8px;
+}
+.ablation-label {
+  color: #aaa;
+  font-weight: bold;
+  font-size: 13px;
+  margin-right: 4px;
+}
+.ablation-btn {
+  background: #333;
+  color: #ccc;
+  font-weight: bold;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+.ablation-btn:hover {
+  background: #444;
+  border-color: #888;
+}
+.ablation-btn.active {
+  background: #0a6e0a;
+  color: #fff;
+  border-color: #2aba10;
+  box-shadow: 0 0 8px rgba(42, 186, 16, 0.4);
+}
+.ablation-status {
+  color: #7cf;
+  font-size: 12px;
+  font-family: monospace;
+  margin-left: 8px;
+}
+
 live-coach {
   flex: 0 0 auto;
   display: flex;

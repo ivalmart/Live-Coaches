@@ -219,7 +219,11 @@ class SnesEmulator extends HTMLElement {
     const newState = this.retrievePlayerState();
     if( JSON.stringify(newState) !== JSON.stringify(this.playerState) ) {
       this.playerState = newState;
-      document.querySelector('live-coach').sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
+      // Ablation study: only auto-push state when liveness is enabled
+      const liveCoach = document.querySelector('live-coach');
+      if (liveCoach && liveCoach.livenessEnabled) {
+        liveCoach.sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
+      }
     }
   }
 

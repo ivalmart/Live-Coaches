@@ -43,6 +43,14 @@ class LiveCoach extends HTMLElement {
     // this._gameState = null;
     this.geminiInit = false;
     // this.functionCalls = null;
+
+    // Ablation study toggles
+    this.livenessEnabled = true;
+    this.coachnessEnabled = true;
+
+    // Raw prompt text (loaded once, reused for mode switches)
+    this._coachPromptRaw = "";
+    this._gamePromptRaw = "";
   }
 
   // called each time component is added onto document
@@ -64,15 +72,7 @@ class LiveCoach extends HTMLElement {
     try {
       this._chat = await this._ai.chats.create({
         model: "gemini-3-flash-preview",
-        config: {
-          systemInstruction: this._instructions,
-          tools: [{
-            functionDeclarations: FUNCTION_DECLARATIONS
-          }],
-          thinkingConfig: {
-              thinkingLevel: "MINIMAL",
-          }
-        }
+        config: this._buildChatConfig(),
       });
       this.geminiInit = true;
 
@@ -153,10 +153,71 @@ class LiveCoach extends HTMLElement {
 
   // Prompt Retrieval Concatenation
   async initCoachGamePrompt() {
-    let coachPrompt = await fetch('../prompts/coach-prompt.md');
-    this._instructions = this._instructions.concat(await coachPrompt.text());
-    let gamePrompt = await fetch(`../prompts/${this.gameName}.md`);
-    this._instructions = this._instructions.concat("\n\n").concat(await gamePrompt.text());
+    const [coachResp, gameResp] = await Promise.all([
+      fetch('../prompts/coach-prompt.md'),
+      fetch(`../prompts/${this.gameName}.md`),
+    ]);
+    this._coachPromptRaw = await coachResp.text();
+    this._gamePromptRaw = await gameResp.text();
+    this._instructions = this.buildSystemPrompt(this.livenessEnabled, this.coachnessEnabled);
+  }
+
+  // --------------- Ablation Study: Dynamic Prompt Construction ---------------
+  // Coachness ON  → include coach-prompt.md; OFF → no system prompt at all
+  // Liveness is gated at the emulator level (auto state push)
+  buildSystemPrompt(liveness, coachness) {
+    if (coachness) {
+      return this._coachPromptRaw + "\n\n" + this._gamePromptRaw;
+    }
+    return "";
+  }
+
+  // Build Gemini chat config based on current ablation toggles
+  // Function calling tools are only included when liveness is ON
+  _buildChatConfig() {
+    const config = {
+      systemInstruction: this._instructions,
+      thinkingConfig: { thinkingLevel: "MINIMAL" },
+    };
+    if (this.livenessEnabled) {
+      config.tools = [{ functionDeclarations: FUNCTION_DECLARATIONS }];
+    }
+    return config;
+  }
+
+  // Switch ablation mode and re-initialize the chat session
+  async setAblationMode(liveness, coachness) {
+    this.livenessEnabled = liveness;
+    this.coachnessEnabled = coachness;
+
+    // Rebuild prompt for new mode
+    this._instructions = this.buildSystemPrompt(liveness, coachness);
+
+    // Log mode change
+    const modeName = (liveness && coachness) ? "Live Coach (both)"
+      : (liveness && !coachness) ? "Liveness Only"
+      : (!liveness && coachness) ? "Coachness Only"
+      : "Neither (baseline)";
+    console.log(`Ablation mode changed to: ${modeName}`);
+
+    // Re-create chat session with new system prompt and tools config
+    if (this._ai) {
+      try {
+        this._chat = await this._ai.chats.create({
+          model: "gemini-3-flash-preview",
+          config: this._buildChatConfig(),
+        });
+
+        // Clear chat display and history for clean ablation run
+        const display = this.querySelector('#message_display');
+        if (display) display.innerHTML = '';
+        this.history = [];
+
+        this.displayMessage("ErrorSystem", `Mode switched to: ${modeName}. Chat reset.`, this.querySelector('#message_display'));
+      } catch (error) {
+        console.warn("Error reinitializing chat for ablation mode:", error);
+      }
+    }
   }
 
   // Sending Chat Message Functionality
@@ -264,7 +325,7 @@ class LiveCoach extends HTMLElement {
     }
   }
 
-  downloadTranscript() {
+  downloadChatTranscript() {
     const filename = "transcript.json";
     const transcriptContent = JSON.stringify(this.history);
     let element = document.createElement("a");

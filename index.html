@@ -28,6 +28,16 @@
     <main>
       <div style="max-width: 1200px; margin: 24px auto; text-align: center;">
         <h1>Live Coach / SNES Emulator</h1>
+
+        <!-- Ablation Study Toggle Controls -->
+        <div id="ablation-controls">
+          <span class="ablation-label">Ablation Mode:</span>
+          <button id="btn-both" class="ablation-btn active" title="Full Live Coach (Liveness + Coachness)">Live Coach</button>
+          <button id="btn-liveness" class="ablation-btn" title="Liveness Only (no coaching behavior)">Liveness Only</button>
+          <button id="btn-coachness" class="ablation-btn" title="Coachness Only (no automatic game state)">Coachness Only</button>
+          <span id="ablation-status" class="ablation-status">Liveness: ON | Coachness: ON</span>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div class="emulator-section">
             <snes-emulator
@@ -60,6 +70,27 @@
         const liveCoach = document.querySelector('live-coach');
         liveCoach.downloadChatTranscript();
       }
+
+      // ---- Ablation Study Toggle Wiring ----
+      function updateAblationUI(activeId, livenessOn, coachnessOn) {
+        document.querySelectorAll('.ablation-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(activeId).classList.add('active');
+        document.getElementById('ablation-status').textContent =
+          `Liveness: ${livenessOn ? 'ON' : 'OFF'} | Coachness: ${coachnessOn ? 'ON' : 'OFF'}`;
+      }
+
+      document.getElementById('btn-both').addEventListener('click', () => {
+        updateAblationUI('btn-both', true, true);
+        document.querySelector('live-coach').setAblationMode(true, true);
+      });
+      document.getElementById('btn-liveness').addEventListener('click', () => {
+        updateAblationUI('btn-liveness', true, false);
+        document.querySelector('live-coach').setAblationMode(true, false);
+      });
+      document.getElementById('btn-coachness').addEventListener('click', () => {
+        updateAblationUI('btn-coachness', false, true);
+        document.querySelector('live-coach').setAblationMode(false, true);
+      });
 
     </script>
   </body>
