@@ -209,7 +209,7 @@ class SnesEmulator extends HTMLElement {
       // const map_closestNode = smMapEl && smMapEl.player ? smMapEl.player.closestNode : null;
       return {
         energy: dv.getUint8(0x09C2),
-        missiles: dv.getUint8(0x09C4),
+        missiles: dv.getUint8(0x09C6),
         inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
         closestNode: map_closestNode
       };

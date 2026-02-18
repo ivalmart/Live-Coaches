@@ -55,7 +55,7 @@ class LiveCoach extends HTMLElement {
   async initLiveCoach() {
     this.render();
     // update this to do all prompt construction based on the environment
-    this._instructions = await fetch('../prompts/prompts.md').then(content => content.text());
+    this._instructions = await fetch('../prompts/prompt.md').then(content => content.text());
 
     if (this.geminiInit) {
       return;
@@ -133,6 +133,30 @@ class LiveCoach extends HTMLElement {
         let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
         return await response.json();
       },
+      direction_to_goal({goalCoords}) {
+        // x axis <- towards 0, y axis ^ towards 0
+        const playerObj = document.querySelector('sm-map').player;
+        const playerCoords = { x: playerObj.x, y: playerObj.y };
+        const directionVector = {
+          x: goalCoords.x - playerCoords.x,
+          y: goalCoords.y - playerCoords.y
+        };
+
+        let coordinalDirection = [];
+        if(directionVector.x > 0) {
+          coordinalDirection.push("right");
+        } else if (directionVector.x < 0) {
+          coordinalDirection.push("left");
+        }
+
+        if(directionVector.y > 0) {
+          coordinalDirection.push("down");
+        } else if (directionVector.y < 0) {
+          coordinalDirection.push("up");
+        }
+
+        return coordinalDirection;
+      },
       set_whiteboard_content({msg}) {
         try {
           const whiteboard = document.querySelector('coach-whiteboard');
@@ -150,23 +174,27 @@ class LiveCoach extends HTMLElement {
   // Build Gemini chat config based on current ablation toggles
   // Function calling tools are only included when liveness is ON
   _initChatConfig() {
-    const config = {
-      systemInstruction: this._instructions,
-      thinkingConfig: { thinkingLevel: "MINIMAL" },
-    };
-    const filteredFunctionDeclarations = FUNCTION_DECLARATIONS.filter(fd => {
-      const acceptedFunctions = fd.included_ablation || [];
-      if (this.livenessEnabled && acceptedFunctions.includes("liveness")) return true;
-      if (this.coachnessEnabled && acceptedFunctions.includes("coachness")) return true;
-      return false;
-    });
+      const config = {
+        systemInstruction: this._instructions,
+        thinkingConfig: { thinkingLevel: "MINIMAL" },
+      };
+      const filteredFunctionDeclarations = FUNCTION_DECLARATIONS.filter(fd => {
+        const acceptedFunctions = fd.included_ablation || [];
+        if (this.livenessEnabled && acceptedFunctions.includes("liveness")) return true;
+        if (this.coachnessEnabled && acceptedFunctions.includes("coachness")) return true;
+        return false;
+      }).map(fd => {
+        // removes the parameter that separates by environments since Gemini dislikes unknown parameters.
+        const { included_ablation, ...rest } = fd;
+        return rest;
+      });
 
-    console.log("Filtered function declarations:", filteredFunctionDeclarations);
+      console.log("Filtered function declarations (for Gemini):", filteredFunctionDeclarations);
 
-    if (filteredFunctionDeclarations.length > 0) {
-      config.tools = [{ functionDeclarations: filteredFunctionDeclarations }];
-    }
-    return config;
+      if (filteredFunctionDeclarations.length > 0) {
+        config.tools = [{ functionDeclarations: filteredFunctionDeclarations }];
+      }
+      return config;
   }
 
   // Switch ablation mode and re-initialize the chat session

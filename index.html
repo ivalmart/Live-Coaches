@@ -47,7 +47,7 @@
           </div>
           <live-coach game-name="SuperMetroid"></live-coach>
         </div>
-        <sm-map style="display: none;"></sm-map>
+        <sm-map style="display: block;"></sm-map>
       </div>
     </main>
 
@@ -62,7 +62,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const CURRENT_ENVIRONMENT = urlParams.get('Env');
         if(CURRENT_ENVIRONMENT) {
-          console.log(`Current Game Environment of Ablation Study: ${CURRENT_ENVIRONMENT}`);
           document.querySelector('live-coach').setAblationMode(
             ENVIRONMENT[CURRENT_ENVIRONMENT].liveness,
             ENVIRONMENT[CURRENT_ENVIRONMENT].coachness
@@ -70,6 +69,14 @@
         } else {
           window.location.assign(`?Env=LiveCoach`);
         }
+      }
+
+      window.checkCoordsDirection = async function() {
+        const player = document.querySelector('sm-map').player;
+        let goal = document.querySelector('snes-emulator').playerState.closestNode;
+        goal = await document.querySelector('live-coach').functionCallTools.get_node_info({nodeName: goal});
+        console.log("Player Coords:", player);
+        console.log("Goal Coords:", goal);
       }
 
       window.save_game_state = function() {

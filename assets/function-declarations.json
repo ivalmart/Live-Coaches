@@ -127,6 +127,31 @@
     "included_ablation": ["coachness"]
   },
   {
+    "name": "direction_to_goal",
+    "description": "Takes in a set of x,y coordinates from the goal node and returns the direction vector from the player's current position to the given goal parameter. Use this to give the player a sense of which direction they should be moving in to get closer to their goal. Note that the coordinate system has x positive going to the right and y positive going down.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "goalCoords": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "the x coordinate of the goal position"
+            },
+            "y": {
+              "type": "number",
+              "description": "the y coordinate of the goal position"
+            }
+          },
+          "required": ["x", "y"]
+        }
+      },
+      "required": ["goalCoords"]
+    },
+    "included_ablation": ["liveness"]
+  },
+  {
     "name": "set_whiteboard_content",
     "description": "Place visual content into the whiteboard area. Content such as text, images, or a map should be embedded into the board area. Use this to show visual diagrams, screenshots, list of goals or a focused map view.",
     "parameters": {
