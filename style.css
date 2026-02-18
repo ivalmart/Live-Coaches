@@ -1,4 +1,4 @@
-/* Game Emulator Canvas Style*/
+/* Game Emulator Canvas Style */
 canvas { /* used for adjusting the emulator screen */
   width: 520px;
   border: thick solid gold;
@@ -69,6 +69,15 @@ canvas { /* used for adjusting the emulator screen */
   box-sizing: border-box;
 }
 
+.ablation-menu-ui {
+  width: 400px;
+  padding: 8px;
+  line-height: 20px;
+  border: 2px solid #6e6e6e;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 /* default button style */
 button {
   background: rgb(42, 186, 16);
@@ -84,6 +93,51 @@ button {
 .emulator-section {
   flex: 1;
   margin-right: 20px;
+}
+
+live-coach {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* EVEYRTHING BELOW IS GENERATED*/
+
+/* Whiteboard component */
+coach-whiteboard {
+  display: block;
+  width: 100%;
+}
+
+.whiteboard {
+  height: 300px;
+  width: 100%;
+  background: #ffffff;
+  color: #000;
+  overflow: auto;
+  padding: 10px;
+  border: 3px solid #333;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.whiteboard img {
+  max-width: 100%;
+  height: auto;
+}
+
+.whiteboard-placeholder {
+  opacity: 0.45;
+  font-style: italic;
+  text-align: center;
+  margin-top: 1em;
+}
+
+#whiteboard-map {
+  width: 100%;
+  height: 100%;
 }
 
 /* Ablation Study Toggle Controls */
@@ -130,49 +184,4 @@ button {
   font-size: 12px;
   font-family: monospace;
   margin-left: 8px;
-}
-
-live-coach {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-/* EVEYRTHING BELOW IS GENERATED*/
-
-/* Whiteboard component */
-coach-whiteboard {
-  display: block;
-  width: 100%;
-}
-
-.whiteboard {
-  height: 300px;
-  width: 100%;
-  background: #ffffff;
-  color: #000;
-  overflow: auto;
-  padding: 10px;
-  border: 3px solid #333;
-  border-radius: 6px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.whiteboard img {
-  max-width: 100%;
-  height: auto;
-}
-
-.whiteboard-placeholder {
-  opacity: 0.45;
-  font-style: italic;
-  text-align: center;
-  margin-top: 1em;
-}
-
-#whiteboard-map {
-  width: 100%;
-  height: 100%;
 }

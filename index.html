@@ -26,18 +26,15 @@
     <script type="module" src="../tag-scripts/coach-whiteboard.js"></script>
 
     <main>
+      <!-- Ablation Study Hyperlinks -->
+      <details class="ablation-menu-ui">
+        <summary><strong>Ablation Environments</strong></summary>
+        <a href="?Env=LiveCoach">Complete Live Coach</a> |
+        <a href="?Env=LivenessOnly">Liveness Only</a> |
+        <a href="?Env=CoachnessOnly">Coachness Only</a>
+      </details>
+
       <div style="max-width: 1200px; margin: 24px auto; text-align: center;">
-        <h1>Live Coach / SNES Emulator</h1>
-
-        <!-- Ablation Study Toggle Controls -->
-        <div id="ablation-controls">
-          <span class="ablation-label">Ablation Mode:</span>
-          <button id="btn-both" class="ablation-btn active" title="Full Live Coach (Liveness + Coachness)">Live Coach</button>
-          <button id="btn-liveness" class="ablation-btn" title="Liveness Only (no coaching behavior)">Liveness Only</button>
-          <button id="btn-coachness" class="ablation-btn" title="Coachness Only (no automatic game state)">Coachness Only</button>
-          <span id="ablation-status" class="ablation-status">Liveness: ON | Coachness: ON</span>
-        </div>
-
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div class="emulator-section">
             <snes-emulator
@@ -56,6 +53,25 @@
 
     <!-- Main Script -->
     <script type="module">
+      window.onload = async function() {
+        const ENVIRONMENT = { // Ablation study environments for enabling/disabling certain features
+          LiveCoach: { liveness: true, coachness: true },
+          LivenessOnly: { liveness: true, coachness: false },
+          CoachnessOnly: { liveness: false, coachness: true }
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const CURRENT_ENVIRONMENT = urlParams.get('Env');
+        if(CURRENT_ENVIRONMENT) {
+          console.log(`Current Game Environment of Ablation Study: ${CURRENT_ENVIRONMENT}`);
+          document.querySelector('live-coach').setAblationMode(
+            ENVIRONMENT[CURRENT_ENVIRONMENT].liveness,
+            ENVIRONMENT[CURRENT_ENVIRONMENT].coachness
+          );
+        } else {
+          window.location.assign(`?Env=LiveCoach`);
+        }
+      }
+
       window.save_game_state = function() {
         const emulator = document.querySelector('snes-emulator');
         emulator.exportSaveState();
@@ -70,28 +86,6 @@
         const liveCoach = document.querySelector('live-coach');
         liveCoach.downloadChatTranscript();
       }
-
-      // ---- Ablation Study Toggle Wiring ----
-      function updateAblationUI(activeId, livenessOn, coachnessOn) {
-        document.querySelectorAll('.ablation-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(activeId).classList.add('active');
-        document.getElementById('ablation-status').textContent =
-          `Liveness: ${livenessOn ? 'ON' : 'OFF'} | Coachness: ${coachnessOn ? 'ON' : 'OFF'}`;
-      }
-
-      document.getElementById('btn-both').addEventListener('click', () => {
-        updateAblationUI('btn-both', true, true);
-        document.querySelector('live-coach').setAblationMode(true, true);
-      });
-      document.getElementById('btn-liveness').addEventListener('click', () => {
-        updateAblationUI('btn-liveness', true, false);
-        document.querySelector('live-coach').setAblationMode(true, false);
-      });
-      document.getElementById('btn-coachness').addEventListener('click', () => {
-        updateAblationUI('btn-coachness', false, true);
-        document.querySelector('live-coach').setAblationMode(false, true);
-      });
-
     </script>
   </body>
 </html>
