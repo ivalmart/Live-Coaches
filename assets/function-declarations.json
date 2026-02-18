@@ -11,7 +11,8 @@
         }
       },
       "required": ["level"]
-    }
+    },
+    "included_ablation": ["liveness"]
   },
   {
     "name": "get_player_state",
@@ -20,7 +21,8 @@
       "type": "object",
       "properties": {},
       "required": []
-    }
+    },
+    "included_ablation": ["liveness"]
   },
   {
     "name": "save_to_slot",
@@ -34,7 +36,8 @@
         }
       },
       "required": ["slot_index"]
-    }
+    },
+    "included_ablation": ["liveness"]
   },
   {
     "name": "load_from_slot",
@@ -48,7 +51,8 @@
         }
       },
       "required": ["slot_index"]
-    }
+    },
+    "included_ablation": ["liveness"]
   },
   {
     "name": "evaluate_js_with_confirmation",
@@ -62,7 +66,8 @@
         }
       },
       "required": ["code"]
-    }
+    },
+    "included_ablation": ["liveness"]
   },
   {
     "name": "get_set_bits_from_packed_value",
@@ -76,7 +81,8 @@
         }
       },
       "required": ["packed_value"]
-    }
+    },
+    "included_ablation": ["liveness", "coachness"]
   },
   {
     "name": "get_route_to_goal",
@@ -102,7 +108,8 @@
         }
       },
       "required": ["nodeName", "itemList", "goalNode"]
-    }
+    },
+    "included_ablation": ["coachness"]
   },
   {
     "name": "get_node_info",
@@ -116,7 +123,8 @@
         }
       },
       "required": ["nodeName"]
-    }
+    },
+    "included_ablation": ["coachness"]
   },
   {
     "name": "set_whiteboard_content",
@@ -130,6 +138,7 @@
         }
       },
       "required": ["msg"]
-    }
+    },
+    "included_ablation": ["liveness"]
   }
 ]

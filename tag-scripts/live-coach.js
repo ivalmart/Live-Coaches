@@ -2,7 +2,6 @@ import { GoogleGenAI } from "https://esm.run/@google/genai";
 import { marked } from "https://esm.run/marked";
 import FUNCTION_DECLARATIONS from "../assets/function-declarations.json" with { "type": "json" }
 
-
 // API Key Retrieval
 async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
@@ -40,17 +39,11 @@ class LiveCoach extends HTMLElement {
     // Specific game variables
     this.gameName = "";
     this.gamePrompt = "";
-    // this._gameState = null;
     this.geminiInit = false;
-    // this.functionCalls = null;
 
     // Ablation study toggles
     this.livenessEnabled = true;
     this.coachnessEnabled = true;
-
-    // Raw prompt text (loaded once, reused for mode switches)
-    this._coachPromptRaw = "";
-    this._gamePromptRaw = "";
   }
 
   // called each time component is added onto document
@@ -61,7 +54,9 @@ class LiveCoach extends HTMLElement {
 
   async initLiveCoach() {
     this.render();
-    await this.initCoachGamePrompt();
+    // update this to do all prompt construction based on the environment
+    this._instructions = await fetch('../prompts/prompts.md').then(content => content.text());
+
     if (this.geminiInit) {
       return;
     }
@@ -72,7 +67,7 @@ class LiveCoach extends HTMLElement {
     try {
       this._chat = await this._ai.chats.create({
         model: "gemini-3-flash-preview",
-        config: this._buildChatConfig(),
+        config: this._initChatConfig(),
       });
       this.geminiInit = true;
 
@@ -151,36 +146,25 @@ class LiveCoach extends HTMLElement {
     };
   }
 
-  // Prompt Retrieval Concatenation
-  async initCoachGamePrompt() {
-    const [coachResp, gameResp] = await Promise.all([
-      fetch('../prompts/coach-prompt.md'),
-      fetch(`../prompts/${this.gameName}.md`),
-    ]);
-    this._coachPromptRaw = await coachResp.text();
-    this._gamePromptRaw = await gameResp.text();
-    this._instructions = this.buildSystemPrompt(this.livenessEnabled, this.coachnessEnabled);
-  }
-
-  // --------------- Ablation Study: Dynamic Prompt Construction ---------------
-  // Coachness ON  → include coach-prompt.md; OFF → no system prompt at all
-  // Liveness is gated at the emulator level (auto state push)
-  buildSystemPrompt(liveness, coachness) {
-    if (coachness) {
-      return this._coachPromptRaw + "\n\n" + this._gamePromptRaw;
-    }
-    return "";
-  }
-
+  // --------------- Ablation Study: Dynamic Environment Construction ---------------
   // Build Gemini chat config based on current ablation toggles
   // Function calling tools are only included when liveness is ON
-  _buildChatConfig() {
+  _initChatConfig() {
     const config = {
       systemInstruction: this._instructions,
       thinkingConfig: { thinkingLevel: "MINIMAL" },
     };
-    if (this.livenessEnabled) {
-      config.tools = [{ functionDeclarations: FUNCTION_DECLARATIONS }];
+    const filteredFunctionDeclarations = FUNCTION_DECLARATIONS.filter(fd => {
+      const acceptedFunctions = fd.included_ablation || [];
+      if (this.livenessEnabled && acceptedFunctions.includes("liveness")) return true;
+      if (this.coachnessEnabled && acceptedFunctions.includes("coachness")) return true;
+      return false;
+    });
+
+    console.log("Filtered function declarations:", filteredFunctionDeclarations);
+
+    if (filteredFunctionDeclarations.length > 0) {
+      config.tools = [{ functionDeclarations: filteredFunctionDeclarations }];
     }
     return config;
   }
@@ -190,8 +174,7 @@ class LiveCoach extends HTMLElement {
     this.livenessEnabled = liveness;
     this.coachnessEnabled = coachness;
 
-    // Rebuild prompt for new mode
-    this._instructions = this.buildSystemPrompt(liveness, coachness);
+    console.log(`Setting ablation mode - Liveness: ${liveness}, Coachness: ${coachness}`);
 
     // Log mode change
     const modeName = (liveness && coachness) ? "Live Coach (both)"
@@ -205,7 +188,7 @@ class LiveCoach extends HTMLElement {
       try {
         this._chat = await this._ai.chats.create({
           model: "gemini-3-flash-preview",
-          config: this._buildChatConfig(),
+          config: this._initChatConfig(),
         });
 
         // Clear chat display and history for clean ablation run
@@ -232,7 +215,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        // return;
+        return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
