@@ -202,9 +202,9 @@
         }     
         
         // Retrieving general prompt + appropriate game prompt
-        let generalPrompt = await fetch('../prompts/coach-prompt.md');
+        let generalPrompt = await fetch('../coach-prompt.md');
         instructions = instructions.concat(await generalPrompt.text());
-        let gamePrompt = await fetch(`../prompts/${gameSelected}.md`);
+        let gamePrompt = await fetch(`../${gameSelected}.md`);
         instructions = instructions.concat(await gamePrompt.text());
         
         // Loading in appropriate Game ROM and Save State (if available)
