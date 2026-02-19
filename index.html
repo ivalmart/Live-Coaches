@@ -29,16 +29,16 @@
       <!-- Ablation Study Hyperlinks -->
       <details class="ablation-menu-ui">
         <summary><strong>Ablation Environments</strong></summary>
-        <a href="?Env=LiveCoach">Complete Live Coach</a> |
-        <a href="?Env=LivenessOnly">Liveness Only</a> |
-        <a href="?Env=CoachnessOnly">Coachness Only</a>
+        <a href="?Env=Live-Coach">Complete Live Coach</a> |
+        <a href="?Env=Liveness-Only">Liveness Only</a> |
+        <a href="?Env=Coachness-Only">Coachness Only</a>
       </details>
 
       <div style="max-width: 1200px; margin: 24px auto; text-align: center;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div class="emulator-section">
             <snes-emulator
-              rom-url="../assets/Super Metroid.sfc"
+              rom-url="../assets/ROMS/Super Metroid.sfc"
               rom-name="SuperMetroid"
               state-url="../assets/sm_save_states/missiles_achieved.state">
             </snes-emulator>
@@ -54,20 +54,13 @@
     <!-- Main Script -->
     <script type="module">
       window.onload = async function() {
-        const ENVIRONMENT = { // Ablation study environments for enabling/disabling certain features
-          LiveCoach: { liveness: true, coachness: true },
-          LivenessOnly: { liveness: true, coachness: false },
-          CoachnessOnly: { liveness: false, coachness: true }
-        }
         const urlParams = new URLSearchParams(window.location.search);
         const CURRENT_ENVIRONMENT = urlParams.get('Env');
         if(CURRENT_ENVIRONMENT) {
-          document.querySelector('live-coach').setAblationMode(
-            ENVIRONMENT[CURRENT_ENVIRONMENT].liveness,
-            ENVIRONMENT[CURRENT_ENVIRONMENT].coachness
-          );
+          console.log("Switched to Environment:", CURRENT_ENVIRONMENT);
         } else {
-          window.location.assign(`?Env=LiveCoach`);
+          console.log("Defaulting to Live Coach Environment");
+          window.location.assign(`?Env=Live-Coach`);
         }
       }
 

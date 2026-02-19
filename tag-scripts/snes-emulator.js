@@ -221,7 +221,7 @@ class SnesEmulator extends HTMLElement {
       this.playerState = newState;
       // Ablation study: only auto-push state when liveness is enabled
       const liveCoach = document.querySelector('live-coach');
-      if (liveCoach && liveCoach.livenessEnabled) {
+      if (liveCoach && liveCoach.ablationSettings.liveness) {
         liveCoach.sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
       }
     }

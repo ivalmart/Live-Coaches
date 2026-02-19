@@ -41,33 +41,81 @@ class LiveCoach extends HTMLElement {
     this.gamePrompt = "";
     this.geminiInit = false;
 
-    // Ablation study toggles
-    this.livenessEnabled = true;
-    this.coachnessEnabled = true;
+    this.ablationSettings = { liveness: false, coachness: false };
+    this.ablationFunctions = [];
   }
 
   // called each time component is added onto document
-  connectedCallback() {
+  async connectedCallback() {
     this.gameName = this.getAttribute('game-name');
+    await this.initAblationSettings();
     this.initLiveCoach();
   }
 
-  async initLiveCoach() {
-    this.render();
-    // update this to do all prompt construction based on the environment
-    this._instructions = await fetch('../prompts/prompt.md').then(content => content.text());
+  async initAblationSettings() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const CURRENT_ENVIRONMENT = urlParams.get('Env');
+    console.log("Current Environment:", CURRENT_ENVIRONMENT);
+    switch (CURRENT_ENVIRONMENT) {
+      case "Live-Coach":
+        this.ablationSettings = { liveness: true, coachness: true };
+        this._instructions = await fetch('../assets/prompts/Live_Coach.md').then(content => content.text());
+        break;
+      case "Liveness-Only":
+        this.ablationSettings = { liveness: true, coachness: false };
+        this._instructions = await fetch('../assets/prompts/Liveness_Only.md').then(content => content.text());
+        break;
+      case "Coachness-Only":
+        this.ablationSettings = { liveness: false, coachness: true };
+        this._instructions = await fetch('../assets/prompts/Coachness_Only.md').then(content => content.text());
+        break;
+      default:
+        this.ablationSettings = { liveness: false, coachness: false };
+        this._instructions = ""; // no prompt given (environment doesn't exist)
+    }
 
+    // Filter function declarations based on ablation settings
+    this.ablationFunctions = FUNCTION_DECLARATIONS.filter(fd => {
+      const acceptedFunctions = fd.included_ablation || [];
+
+      if (this.ablationSettings.liveness && acceptedFunctions.includes("liveness")) {
+        return true;
+      }
+      if (this.ablationSettings.coachness && acceptedFunctions.includes("coachness")) {
+        return true;
+      }
+      return false;
+
+    }).map(fd => {
+      // removes the parameter that separates by environments since Gemini dislikes unknown parameters.
+      const { included_ablation, ...cleaned } = fd;
+      return cleaned;
+    });
+
+    console.log("Filtered function declarations (for Gemini):", this.ablationFunctions);
+  }
+
+  async initLiveCoach() {
     if (this.geminiInit) {
       return;
     }
 
+    this.render();
+
+    console.log("this._instructions:", this._instructions);
+    const environmentConfig = {
+      systemInstruction: this._instructions,
+      thinkingConfig: { thinkingLevel: "MINIMAL" },
+      tools: [{ functionDeclarations: this.ablationFunctions }]
+    };
+
+    // Chat Creation
     const API_KEY = await getApiKey();
     this._ai = new GoogleGenAI({ apiKey: API_KEY });
-
     try {
       this._chat = await this._ai.chats.create({
         model: "gemini-3-flash-preview",
-        config: this._initChatConfig(),
+        config: environmentConfig,
       });
       this.geminiInit = true;
 
@@ -75,11 +123,13 @@ class LiveCoach extends HTMLElement {
       console.warn(error);
     }
 
+    console.log("Environment Config for Gemini:", environmentConfig);
+
     this.functionCallTools = {
       set_energy_level({level}) {
-          const dv = document.querySelector('snes-emulator').callDataView();
-          dv.setUint8(0x09C2, level);
-          return dv.getUint8(0x09C2);
+        const dv = document.querySelector('snes-emulator').callDataView();
+        dv.setUint8(0x09C2, level);
+        return dv.getUint8(0x09C2);
       },
       get_player_state() {
         const state = document.querySelector('snes-emulator').retrievePlayerState();
@@ -87,17 +137,37 @@ class LiveCoach extends HTMLElement {
       },
       // emulator.retro is not working at the moment as it is not initialized
       save_to_slot({slot_index}) {
-        const emulator = document.querySelector('snes-emulator');
-        emulator.SAVE_SLOTS[slot_index] = emulator.retro.serialize().slice();
-        return "Done.";
+        try {
+          const snes = document.querySelector('snes-emulator');
+          if (!snes) {
+            return "Error: <snes-emulator> element not found.";
+          }
+          if (!snes.emulator || !snes.emulator.retro) {
+            return "Error: Emulator not initialized.";
+          }
+          snes.SAVE_SLOTS[slot_index] = snes.emulator.retro.serialize().slice();
+          return "Saved to slot " + slot_index + "successfully!";
+        } catch (error) {
+          return "Error: " + (error && error.message ? error.message : error);
+        }
       },
       load_from_slot({slot_index}) {
         try {
-          const emulator = document.querySelector('snes-emulator');
-          emulator.retro.unserialize(emulator.SAVE_SLOTS[slot_index]);
-          return "Done.";
+          const snes = document.querySelector('snes-emulator');
+          if (!snes) {
+            return "Error: <snes-emulator> element not found.";
+          }
+          if (!snes.emulator || !snes.emulator.retro) {
+            return "Error: Emulator not initialized.";
+          }
+          const slotData = snes.SAVE_SLOTS[slot_index];
+          if (!slotData || !(slotData instanceof Uint8Array)) {
+            return `Error: Save slot ${slot_index} is empty or invalid.`;
+          }
+          snes.emulator.retro.unserialize(slotData);
+          return "Loaded from slot " + slot_index + " successfully!";
         } catch (error) {
-          return "Error: " + error;
+          return "Error: " + (error && error.message ? error.message : error);
         }
       },
       evaluate_js_with_confirmation({code}) {
@@ -170,67 +240,6 @@ class LiveCoach extends HTMLElement {
     };
   }
 
-  // --------------- Ablation Study: Dynamic Environment Construction ---------------
-  // Build Gemini chat config based on current ablation toggles
-  // Function calling tools are only included when liveness is ON
-  _initChatConfig() {
-      const config = {
-        systemInstruction: this._instructions,
-        thinkingConfig: { thinkingLevel: "MINIMAL" },
-      };
-      const filteredFunctionDeclarations = FUNCTION_DECLARATIONS.filter(fd => {
-        const acceptedFunctions = fd.included_ablation || [];
-        if (this.livenessEnabled && acceptedFunctions.includes("liveness")) return true;
-        if (this.coachnessEnabled && acceptedFunctions.includes("coachness")) return true;
-        return false;
-      }).map(fd => {
-        // removes the parameter that separates by environments since Gemini dislikes unknown parameters.
-        const { included_ablation, ...rest } = fd;
-        return rest;
-      });
-
-      console.log("Filtered function declarations (for Gemini):", filteredFunctionDeclarations);
-
-      if (filteredFunctionDeclarations.length > 0) {
-        config.tools = [{ functionDeclarations: filteredFunctionDeclarations }];
-      }
-      return config;
-  }
-
-  // Switch ablation mode and re-initialize the chat session
-  async setAblationMode(liveness, coachness) {
-    this.livenessEnabled = liveness;
-    this.coachnessEnabled = coachness;
-
-    console.log(`Setting ablation mode - Liveness: ${liveness}, Coachness: ${coachness}`);
-
-    // Log mode change
-    const modeName = (liveness && coachness) ? "Live Coach (both)"
-      : (liveness && !coachness) ? "Liveness Only"
-      : (!liveness && coachness) ? "Coachness Only"
-      : "Neither (baseline)";
-    console.log(`Ablation mode changed to: ${modeName}`);
-
-    // Re-create chat session with new system prompt and tools config
-    if (this._ai) {
-      try {
-        this._chat = await this._ai.chats.create({
-          model: "gemini-3-flash-preview",
-          config: this._initChatConfig(),
-        });
-
-        // Clear chat display and history for clean ablation run
-        const display = this.querySelector('#message_display');
-        if (display) display.innerHTML = '';
-        this.history = [];
-
-        this.displayMessage("ErrorSystem", `Mode switched to: ${modeName}. Chat reset.`, this.querySelector('#message_display'));
-      } catch (error) {
-        console.warn("Error reinitializing chat for ablation mode:", error);
-      }
-    }
-  }
-
   // Sending Chat Message Functionality
   async sendChatMessage(message) {
     if (!this._chat) {
@@ -243,7 +252,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
