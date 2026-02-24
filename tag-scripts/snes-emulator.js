@@ -71,7 +71,7 @@ class SnesEmulator extends HTMLElement {
     // Gamepad API https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
     this.gamepadInputs = {
       0: 0,   // A button
-      1: 3,   // Y button
+      1: 2,   // X button
       2: 8,   // Select button
       3: 9,   // Start button
       4: 12,  // Up on stick
@@ -79,7 +79,7 @@ class SnesEmulator extends HTMLElement {
       6: 14,  // Left on stick
       7: 15,  // Right on stick
       8: 1,   // B button
-      9: 2,   // X button
+      9: 3,   // Y button
       10: 4,  // Left bumper trigger
       11: 5   // Right bumper trigger
     };
@@ -89,7 +89,7 @@ class SnesEmulator extends HTMLElement {
     // ----- Keyboard mapping of SNES controller -----
     this.keyboardInputs = [
       { key: "l", value: "A" }, // A button, 0
-      { key: "k", value: "Y" }, // Y button, 1
+      { key: "k", value: "X" }, // X button, 1
       { key: "Shift", value: "Select" }, // Select button, 2
       { key: "Enter", value: "Start" }, // Start button, 3
       { key: "w", value: "Up" }, // Up button, 4
@@ -97,7 +97,7 @@ class SnesEmulator extends HTMLElement {
       { key: "a", value: "Left" }, // Left button, 6
       { key: "d", value: "Right" }, // Right button, 7
       { key: "p", value: "B" }, // B button, 8
-      { key: "o", value: "X" }, // X button, 9
+      { key: "o", value: "Y" }, // Y button, 9
       { key: "q", value: "LeftTrigger" }, // Left bumper, 10
       { key: "e", value: "RightTrigger" }, // Right bumper, 11
     ];
