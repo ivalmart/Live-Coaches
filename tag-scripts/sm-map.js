@@ -74,6 +74,9 @@ class SuperMetroidMap extends HTMLElement {
       return;
     }
     let dv = this.emulatorReference.callDataView();
+    if(!dv) {
+      return;
+    }
     this.player.x = dv.getUint8(0x09A2, true);
     this.player.y = dv.getUint8(0x09A4, true);
     

@@ -8,7 +8,8 @@ class SnesEmulator extends HTMLElement {
   constructor() {
     super();
     this.emulator = null;   // main emulator instance
-    this.controllerInputs = null; // mapping of controller inputs
+    this.keyboardInputs = null; // mapping of controller inputs
+    this.gamepadInputs = null;   // mapping of gamepad inputs
 
     this.romName = null;    // name of ROM for exporting purposes
     this.romUrl = null;     // ROM url from local assets folder
@@ -45,7 +46,7 @@ class SnesEmulator extends HTMLElement {
     }
 
     this.initEmulator();
-    this.initKeyboard();
+    this.initGameControls();
     this.initExportImport();
     await this.initSaveStates();
     this.playerState = this.retrievePlayerState();
@@ -65,10 +66,29 @@ class SnesEmulator extends HTMLElement {
     );
   }
 
-  // ----- Keyboard mapping of SNES controller -----
-  initKeyboard() {
-    this.controllerInputs = [
-      { key: "l", value: "B" }, // B button, 0
+  initGameControls() {
+    // ----- External Gamepad Controller of SNES controller (Switch Pro Controller scheme) -----
+    // Gamepad API https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
+    this.gamepadInputs = {
+      0: 0,   // A button
+      1: 3,   // Y button
+      2: 8,   // Select button
+      3: 9,   // Start button
+      4: 12,  // Up on stick
+      5: 13,  // Down on stick
+      6: 14,  // Left on stick
+      7: 15,  // Right on stick
+      8: 1,   // B button
+      9: 2,   // X button
+      10: 4,  // Left bumper trigger
+      11: 5   // Right bumper trigger
+    };
+    this.checkGamepadInput = this.checkGamepadInput.bind(this);
+    requestAnimationFrame(this.checkGamepadInput);
+
+    // ----- Keyboard mapping of SNES controller -----
+    this.keyboardInputs = [
+      { key: "l", value: "A" }, // A button, 0
       { key: "k", value: "Y" }, // Y button, 1
       { key: "Shift", value: "Select" }, // Select button, 2
       { key: "Enter", value: "Start" }, // Start button, 3
@@ -76,7 +96,7 @@ class SnesEmulator extends HTMLElement {
       { key: "s", value: "Down" }, // Down button, 5
       { key: "a", value: "Left" }, // Left button, 6
       { key: "d", value: "Right" }, // Right button, 7
-      { key: "p", value: "A" }, // A button, 8
+      { key: "p", value: "B" }, // B button, 8
       { key: "o", value: "X" }, // X button, 9
       { key: "q", value: "LeftTrigger" }, // Left bumper, 10
       { key: "e", value: "RightTrigger" }, // Right bumper, 11
@@ -115,9 +135,37 @@ class SnesEmulator extends HTMLElement {
     canvas.setAttribute('tabindex', 0);
     canvas.addEventListener('click', () => canvas.focus());
   }
+
   // Helper function to find index of controller input based on keyboard input
   findGameInputIndex(key) {
-    return this.controllerInputs.findIndex((button) => button.key === key);
+    return this.keyboardInputs.findIndex((button) => button.key === key);
+  }
+
+  // Constantly checking the connected gamepad mapping to how the SNES controller is set up
+  checkGamepadInput() {
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    if (!this.emulator || !gamepads) {
+      requestAnimationFrame(this.checkGamepadInput);
+      return;
+    }
+    for (const gp of gamepads) {
+      if (!gp) continue;
+      // Map gamepad buttons to SNES controller
+      Object.entries(this.gamepadInputs).forEach(([snesIndex, gamepadBtnIndex]) => {
+        const keyState = `0,1,0,${snesIndex}`;
+        const pressed = gp.buttons[gamepadBtnIndex] && gp.buttons[gamepadBtnIndex].pressed;
+        this.emulator.input_state[keyState] = pressed ? 1 : 0;
+      });
+      // Handle D-pad axes for analog sticks
+      if (gp.axes && gp.axes.length >= 2) {
+        const threshold = 0.5;
+        this.emulator.input_state['0,1,0,4'] = gp.axes[1] < -threshold ? 1 : 0; // Up
+        this.emulator.input_state['0,1,0,5'] = gp.axes[1] > threshold ? 1 : 0;  // Down
+        this.emulator.input_state['0,1,0,6'] = gp.axes[0] < -threshold ? 1 : 0; // Left
+        this.emulator.input_state['0,1,0,7'] = gp.axes[0] > threshold ? 1 : 0;  // Right
+      }
+    }
+    requestAnimationFrame(this.checkGamepadInput);
   }
 
   // ----- Handling Load/Save state functionality -----

@@ -64,6 +64,17 @@
         }
       }
 
+      // For debugging purposes: showing if the gamepad controller is connected and working
+      window.addEventListener("gamepadconnected", (e) => {
+        console.log(
+          "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+          e.gamepad.index,
+          e.gamepad.id,
+          e.gamepad.buttons.length,
+          e.gamepad.axes.length,
+        );
+      });
+
       window.checkCoordsDirection = async function() {
         const player = document.querySelector('sm-map').player;
         let goal = document.querySelector('snes-emulator').playerState.closestNode;

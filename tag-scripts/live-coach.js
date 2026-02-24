@@ -55,7 +55,6 @@ class LiveCoach extends HTMLElement {
   async initAblationSettings() {
     const urlParams = new URLSearchParams(window.location.search);
     const CURRENT_ENVIRONMENT = urlParams.get('Env');
-    console.log("Current Environment:", CURRENT_ENVIRONMENT);
     switch (CURRENT_ENVIRONMENT) {
       case "Live-Coach":
         this.ablationSettings = { liveness: true, coachness: true };
@@ -91,8 +90,6 @@ class LiveCoach extends HTMLElement {
       const { included_ablation, ...cleaned } = fd;
       return cleaned;
     });
-
-    console.log("Filtered function declarations (for Gemini):", this.ablationFunctions);
   }
 
   async initLiveCoach() {
@@ -102,7 +99,6 @@ class LiveCoach extends HTMLElement {
 
     this.render();
 
-    console.log("this._instructions:", this._instructions);
     const environmentConfig = {
       systemInstruction: this._instructions,
       thinkingConfig: { thinkingLevel: "MINIMAL" },
@@ -122,8 +118,6 @@ class LiveCoach extends HTMLElement {
     } catch (error) {
       console.warn(error);
     }
-
-    console.log("Environment Config for Gemini:", environmentConfig);
 
     this.functionCallTools = {
       set_energy_level({level}) {
@@ -252,7 +246,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        // return;
+        return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
