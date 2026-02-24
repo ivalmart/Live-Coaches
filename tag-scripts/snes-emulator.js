@@ -142,27 +142,29 @@ class SnesEmulator extends HTMLElement {
   }
 
   // Constantly checking the connected gamepad mapping to how the SNES controller is set up
+  // Navigator Gamepad documentation: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getGamepads
   checkGamepadInput() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
     if (!this.emulator || !gamepads) {
       requestAnimationFrame(this.checkGamepadInput);
       return;
     }
-    for (const gp of gamepads) {
-      if (!gp) continue;
+
+    // gamepads variable stores up to 4 connected controllers, We only care about 1 gamepad for now
+    if(gamepads[0]) {
       // Map gamepad buttons to SNES controller
       Object.entries(this.gamepadInputs).forEach(([snesIndex, gamepadBtnIndex]) => {
         const keyState = `0,1,0,${snesIndex}`;
-        const pressed = gp.buttons[gamepadBtnIndex] && gp.buttons[gamepadBtnIndex].pressed;
+        const pressed = gamepads[0].buttons[gamepadBtnIndex] && gamepads[0].buttons[gamepadBtnIndex].pressed;
         this.emulator.input_state[keyState] = pressed ? 1 : 0;
       });
       // Handle D-pad axes for analog sticks
-      if (gp.axes && gp.axes.length >= 2) {
+      if (gamepads[0].axes && gamepads[0].axes.length >= 2) {
         const threshold = 0.5;
-        this.emulator.input_state['0,1,0,4'] = gp.axes[1] < -threshold ? 1 : 0; // Up
-        this.emulator.input_state['0,1,0,5'] = gp.axes[1] > threshold ? 1 : 0;  // Down
-        this.emulator.input_state['0,1,0,6'] = gp.axes[0] < -threshold ? 1 : 0; // Left
-        this.emulator.input_state['0,1,0,7'] = gp.axes[0] > threshold ? 1 : 0;  // Right
+        this.emulator.input_state['0,1,0,4'] = gamepads[0].axes[1] < -threshold ? 1 : 0; // Up
+        this.emulator.input_state['0,1,0,5'] = gamepads[0].axes[1] > threshold ? 1 : 0;  // Down
+        this.emulator.input_state['0,1,0,6'] = gamepads[0].axes[0] < -threshold ? 1 : 0; // Left
+        this.emulator.input_state['0,1,0,7'] = gamepads[0].axes[0] > threshold ? 1 : 0;  // Right
       }
     }
     requestAnimationFrame(this.checkGamepadInput);
