@@ -5,7 +5,6 @@ import FUNCTION_DECLARATIONS from "../assets/function-declarations.json" with { 
 // API Key Retrieval
 async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
-  apiKey = null;
   
   if (!apiKey) {
     let txt_apiKey = await fetch("../api_key.txt");
@@ -360,18 +359,76 @@ class LiveCoach extends HTMLElement {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>
       <div id="message_display"></div>
-      <input
-        type="text"
-        id="user-input"
-        placeholder="Type your message..."
-      /><br>
+      <div style="position:relative; display:inline-block; width:100%;">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your message..."
+          style="padding-right:28px;"
+        />
+        <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
+      </div>
+      <br>
     `;
 
     const playerInput = this.querySelector("#user-input");
+    const micIcon = this.querySelector("#mic-icon");
+
+    // Speech Recognition setup
+    let recognition = null;
+    let isListening = false;
+    let lastTranscript = "";
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        lastTranscript = event.results[0][0].transcript;
+        playerInput.value = lastTranscript;
+      };
+      recognition.onerror = (event) => {
+        isListening = false;
+        micIcon.style.display = 'none';
+      };
+      recognition.onend = () => {
+        isListening = false;
+        micIcon.style.display = 'none';
+      };
+    }
+
+    // Prevent spacebar from scrolling
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // Listen for spacebar hold/release
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !isListening && recognition && document.activeElement !== playerInput) {
+        try {
+          recognition.start();
+          isListening = true;
+          micIcon.style.display = 'inline';
+        } catch (err) {}
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' && isListening && recognition) {
+        recognition.stop();
+        isListening = false;
+        micIcon.style.display = 'none';
+      }
+    });
+
+    // Enter key for text input
     playerInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && playerInput.value.length > 0) {
         this.sendChatMessage({ to: "Coach", from: "Player", text: playerInput.value });
         playerInput.value = '';
+        lastTranscript = "";
       }
     });
   }
