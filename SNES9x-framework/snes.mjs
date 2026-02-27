@@ -9,6 +9,21 @@ export function emulateSnesConsole(romBytes, stateBytes, container) {
 
   const av_info = retro.get_system_av_info();
 
+  // ----- Web Audio API setup -----
+  const sampleRate = (av_info.timing && av_info.timing.sample_rate) || 32040;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate });
+  const gainNode = audioCtx.createGain();
+  gainNode.connect(audioCtx.destination);
+  emulator.audioCtx = audioCtx;
+  emulator.gainNode = gainNode;
+
+  // Browsers block audio until first user gesture — resume on any interaction
+  const resumeAudio = () => { if (audioCtx.state === 'suspended') audioCtx.resume(); };
+  document.addEventListener('click', resumeAudio, { once: true });
+  document.addEventListener('keydown', resumeAudio, { once: true });
+
+  let nextAudioTime = 0;
+
   const canvas = (emulator.canvas = document.createElement("canvas"));
   const width = av_info.geometry.base_width;
   const height = av_info.geometry.base_height;
@@ -65,7 +80,22 @@ export function emulateSnesConsole(romBytes, stateBytes, container) {
   });
 
   retro.set_audio_sample_batch((left, right, frames) => {
-    //console.log('audio_sample_batch', left, right, frames);
+    if (!frames) return 0;
+    const buffer = audioCtx.createBuffer(2, frames, audioCtx.sampleRate);
+    const leftData = buffer.getChannelData(0);
+    const rightData = buffer.getChannelData(1);
+    // The retrojs wrapper (retro.js) already deinterleaves the raw int16 PCM and
+    // normalizes to Float32 [-1, 1] before calling us — no further scaling needed.
+    leftData.set(left);
+    rightData.set(right);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(gainNode);
+    const now = audioCtx.currentTime;
+    // If we've fallen behind (e.g. tab was hidden), re-anchor with a small look-ahead
+    if (nextAudioTime < now) nextAudioTime = now + 0.05;
+    source.start(nextAudioTime);
+    nextAudioTime += frames / audioCtx.sampleRate;
     return frames;
   });
 
