@@ -117,17 +117,24 @@ export function emulateSnesConsole(romBytes, stateBytes, container) {
 
   function tick() {
     if (running) {
-      try {
-        emulator.dispatchEvent(new Event("beforeRun"));
-        retro.run();
-        emulator.dispatchEvent(new Event("afterRun"));
-      } catch (err) {
-        console.log("err", err);
+      // Only emulate when the audio queue is not more than ~100 ms ahead of
+      // real time.  This prevents A/V drift on high-refresh-rate displays and
+      // stops the ever-growing audio latency caused by setInterval firing
+      // slightly faster than the audio clock.
+      const audioAhead = nextAudioTime - audioCtx.currentTime;
+      if (audioAhead < 0.1) {
+        try {
+          emulator.dispatchEvent(new Event("beforeRun"));
+          retro.run();
+          emulator.dispatchEvent(new Event("afterRun"));
+        } catch (err) {
+          console.log("err", err);
+        }
       }
     }
+    requestAnimationFrame(tick);
   }
-
-  setInterval(tick, 1000/60);
+  requestAnimationFrame(tick);
   
 
   // canvas.addEventListener("click", () => {
