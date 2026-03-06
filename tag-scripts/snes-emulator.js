@@ -275,7 +275,12 @@ class SnesEmulator extends HTMLElement {
         energy: dv.getUint8(0x09C2),
         missiles: dv.getUint8(0x09C6),
         inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
-        closestNode: map_closestNode
+        closestNode: map_closestNode,
+        gameTimeHours: dv.getUint16(0x09E0, true),   // $09E0: game time hours (0-99)
+        gameTimeMinutes: (() => {
+          const GRANULARITY = 2; // minutes — increase to coarsen how often the coach sees a timer change
+          return Math.floor(dv.getUint16(0x09DE, true) / GRANULARITY) * GRANULARITY;
+        })(),
       };
     }
   }
