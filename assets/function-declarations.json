@@ -1,20 +1,5 @@
 [
   {
-    "name": "set_energy_level",
-    "description": "set the player character Samus' health level to a specific value",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "level": {
-          "type": "number",
-          "description": "integer between 0 and 99"
-        }
-      },
-      "required": ["level"]
-    },
-    "included_ablation": ["liveness"]
-  },
-  {
     "name": "get_player_state",
     "description": "Gets the current state of the game (e.g. energy/HP, missiles/ammo, location/room/zone).",
     "parameters": {
@@ -51,21 +36,6 @@
         }
       },
       "required": ["slot_index"]
-    },
-    "included_ablation": ["liveness"]
-  },
-  {
-    "name": "evaluate_js_with_confirmation",
-    "description": "runs javascript code in the context of the emulator's page (after prompting the user to confirm in a dialog box) -- use this powerful feature to do on-the-fly customizations of the UI",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "arbitrary JavaScript (exciting!)"
-        }
-      },
-      "required": ["code"]
     },
     "included_ablation": ["liveness"]
   },

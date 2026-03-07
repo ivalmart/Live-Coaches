@@ -119,16 +119,10 @@ class LiveCoach extends HTMLElement {
     }
 
     this.functionCallTools = {
-      set_energy_level({level}) {
-        const dv = document.querySelector('snes-emulator').callDataView();
-        dv.setUint8(0x09C2, level);
-        return dv.getUint8(0x09C2);
-      },
       get_player_state() {
         const state = document.querySelector('snes-emulator').retrievePlayerState();
         return JSON.stringify(state);
       },
-      // emulator.retro is not working at the moment as it is not initialized
       save_to_slot({slot_index}) {
         try {
           const snes = document.querySelector('snes-emulator');
@@ -161,13 +155,6 @@ class LiveCoach extends HTMLElement {
           return "Loaded from slot " + slot_index + " successfully!";
         } catch (error) {
           return "Error: " + (error && error.message ? error.message : error);
-        }
-      },
-      evaluate_js_with_confirmation({code}) {
-        if (confirm("Allow running this code?\n\n"+code)) {
-          return "Code execution result: "+ eval(code);
-        } else {
-          return "The user disallowed this code execution.";
         }
       },
       get_set_bits_from_packed_value({packed_value}) {
@@ -245,7 +232,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
