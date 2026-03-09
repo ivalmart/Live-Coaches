@@ -311,12 +311,12 @@ class SnesEmulator extends HTMLElement {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>
       <div class="emu_style">
-        <div id="emulator"></div>
-        <div>
+        <div style="display: none;">
           <button id="export">Export State</button>
           <button id="import">Import State</button>
           <button id="mute">Mute</button>
         </div>
+        <div id="emulator"></div>
       </div>
     `;
   }

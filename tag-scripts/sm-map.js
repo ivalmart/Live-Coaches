@@ -88,7 +88,7 @@ class SuperMetroidMap extends HTMLElement {
   render() {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>
-      <div class="map_style">
+      <div class="map_style" style="display: none;">
         <div id="sm-map" style="width: 600px; height: 600px; margin: auto;"></div>
       </div>
     `;

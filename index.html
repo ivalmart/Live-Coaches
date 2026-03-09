@@ -34,20 +34,20 @@
         <a href="?Env=Coachness-Only">Coachness Only</a>
       </details>
 
-      <div style="max-width: 1200px; margin: 24px auto; text-align: center;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          <div class="emulator-section">
-            <snes-emulator
-              rom-url="../assets/ROMS/Super Metroid.sfc"
-              rom-name="SuperMetroid"
-              state-url="../assets/sm_save_states/missiles_achieved.state">
-            </snes-emulator>
-            <controller-mapping style="display: none;"></controller-mapping>
-            <coach-whiteboard></coach-whiteboard>
-          </div>
-          <live-coach game-name="SuperMetroid"></live-coach>
+      <div class="main-layout">
+        <div class="left-panel">
+          <snes-emulator
+            rom-url="../assets/ROMS/Super Metroid.sfc"
+            rom-name="SuperMetroid"
+            state-url="../assets/sm_save_states/missiles_achieved.state">
+          </snes-emulator>
+          <controller-mapping style="display: none;"></controller-mapping>
+          <sm-map style="display: block;"></sm-map>
         </div>
-        <sm-map style="display: block;"></sm-map>
+        <div class="right-panel">
+          <live-coach game-name="SuperMetroid"></live-coach>
+          <coach-whiteboard></coach-whiteboard>
+        </div>
       </div>
     </main>
 
