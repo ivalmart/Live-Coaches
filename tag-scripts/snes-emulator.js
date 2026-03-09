@@ -60,15 +60,13 @@ class SnesEmulator extends HTMLElement {
 
   // Toggle mute/unmute on the game audio GainNode
   initAudioControls() {
-    const muteBtn = this.querySelector('#mute');
-    if (!muteBtn) return;
-    let muted = false;
-    muteBtn.onclick = () => {
-      if (!this.emulator || !this.emulator.gainNode) return;
-      muted = !muted;
-      this.emulator.gainNode.gain.value = muted ? 0 : 1;
-      muteBtn.textContent = muted ? 'Unmute' : 'Mute';
-    };
+    this.muted = false;
+  }
+
+  toggleMute() {
+    if (!this.emulator || !this.emulator.gainNode) return;
+    this.muted = !this.muted;
+    this.emulator.gainNode.gain.value = this.muted ? 0 : 1;
   }
 
   // Initialize emulator using snes.mjs functions
@@ -125,6 +123,11 @@ class SnesEmulator extends HTMLElement {
         } else {
           document.exitFullscreen();
         }
+        e.preventDefault();
+        return;
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        this.toggleMute();
         e.preventDefault();
         return;
       }
@@ -314,7 +317,6 @@ class SnesEmulator extends HTMLElement {
         <div style="display: none;">
           <button id="export">Export State</button>
           <button id="import">Import State</button>
-          <button id="mute">Mute</button>
         </div>
         <div id="emulator"></div>
       </div>
