@@ -385,16 +385,16 @@ class LiveCoach extends HTMLElement {
       };
     }
 
-    // Prevent spacebar from scrolling
+    // Prevent spacebar from scrolling only when player is focused on game canvas
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
+      if (e.code === 'Space' && document.activeElement?.tagName === 'CANVAS') {
         e.preventDefault();
       }
     }, { passive: false });
 
-    // Listen for spacebar hold/release
+    // Listen for spacebar hold/release, only when player is focused on game canvas
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !isListening && recognition && document.activeElement !== playerInput) {
+      if (e.code === 'Space' && !isListening && recognition && document.activeElement?.tagName === 'CANVAS') {
         try {
           recognition.start();
           isListening = true;
