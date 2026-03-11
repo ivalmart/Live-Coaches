@@ -232,7 +232,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });

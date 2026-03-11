@@ -78,11 +78,11 @@ canvas { /* used for adjusting the emulator screen */
   word-break: break-word;
   white-space: pre-wrap;
   background-color: #ffffff;
-  line-height: 1.2;
+  line-height: 1.1;
   box-sizing: border-box;
 }
 #message_display div {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .Player-name {
   color: #9204ff;
