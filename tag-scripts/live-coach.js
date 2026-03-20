@@ -232,7 +232,7 @@ class LiveCoach extends HTMLElement {
       }
 
       try {
-        // return;
+        return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
@@ -256,6 +256,9 @@ class LiveCoach extends HTMLElement {
                 let collapsibleResults = document.createElement("details");
                 let fc_Title = document.createElement("summary");
                 let contents = document.createElement("pre");
+                collapsibleResults.className = "function-call-details";
+                fc_Title.className = "function-call-summary";
+                contents.className = "function-call-content";
                 fc_Title.textContent = call.name;
                 contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(result);
                 collapsibleResults.appendChild(fc_Title);
@@ -297,6 +300,7 @@ class LiveCoach extends HTMLElement {
       // Determine display label, class and emoji
       let className = '';
       let emoji = '';
+      let isFunctionCallMessage = false;
 
       if (sender === 'Player') {
         className = 'Player-name';
@@ -307,9 +311,14 @@ class LiveCoach extends HTMLElement {
       } else if (sender === "FunctionCallResults") {
         className = 'FunctionCall';
         sender = '🔧';
+        isFunctionCallMessage = true;
       }
 
       const messageElement = document.createElement("div");
+      messageElement.className = "chat-message";
+      if (isFunctionCallMessage) {
+        messageElement.classList.add("function-call-message");
+      }
       // Build the header markup. Only include emoji span if emoji is set.
       const header = emoji ? `<strong class="${className}"><span class="chat-emoji">${emoji}</span></strong>` : `<strong class="${className}">${sender}:</strong>`;
 
