@@ -64,7 +64,7 @@ canvas { /* used for adjusting the emulator screen */
 
 /* Chatbot style*/
 #message_display {
-  font-size: 14px;
+  font-size: 12px;
   height: 500px;
   overflow-y: scroll;
   overflow-x: auto;
@@ -84,6 +84,49 @@ canvas { /* used for adjusting the emulator screen */
 #message_display div {
   margin-bottom: 2px;
 }
+
+#message_display .chat-message {
+  margin-bottom: 3px;
+}
+
+#message_display .chat-message p {
+  margin: 2px 0 0;
+}
+
+#message_display .function-call-message {
+  background: #f3f3f3;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+#message_display .function-call-message .FunctionCall {
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+#message_display .function-call-details {
+  background: #ececec;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+#message_display .function-call-summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+#message_display .function-call-content {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #444;
+  white-space: pre-wrap;
+}
+
 .Player-name {
   color: #9204ff;
   font-weight: bold;
