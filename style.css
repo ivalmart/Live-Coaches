@@ -148,6 +148,33 @@ canvas { /* used for adjusting the emulator screen */
   box-sizing: border-box;
 }
 
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.chat-input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.tts-btn {
+  background: #135f8b;
+  font-size: 11px;
+  padding: 0.35em 0.75em;
+  margin: 0;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tts-btn[aria-pressed="true"] {
+  background: #0e8b4a;
+}
+
 .ablation-menu-ui {
   width: 400px;
   padding: 8px;

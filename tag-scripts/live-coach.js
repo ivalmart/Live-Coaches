@@ -42,6 +42,69 @@ class LiveCoach extends HTMLElement {
 
     this.ablationSettings = { liveness: false, coachness: false };
     this.ablationFunctions = [];
+
+    // TTS settings
+    this.ttsEnabled = localStorage.getItem("LIVE_COACH_TTS_ENABLED") === "true";
+    this.ttsVoiceName = localStorage.getItem("LIVE_COACH_TTS_VOICE") || "";
+    this.ttsHasPrimed = false;
+  }
+
+  getCoachSpeechText(rawMessage) {
+    if (!rawMessage) {
+      return "";
+    }
+
+    const html = marked.parse(rawMessage);
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent ? tempDiv.textContent.trim() : "";
+  }
+
+  tryPrimeSpeechSynthesis() {
+    if (this.ttsHasPrimed || !window.speechSynthesis) {
+      return;
+    }
+    this.ttsHasPrimed = true;
+    try {
+      window.speechSynthesis.resume();
+    } catch (_error) {
+      // Ignore browsers that do not expose resumable speech state.
+    }
+  }
+
+  speakCoachMessage(rawMessage) {
+    if (!this.ttsEnabled || !window.speechSynthesis) {
+      return;
+    }
+
+    const text = this.getCoachSpeechText(rawMessage);
+    if (!text) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.02;
+    utterance.pitch = 1.0;
+
+    if (this.ttsVoiceName) {
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find((voice) => voice.name === this.ttsVoiceName);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+
+    // Keep coaching responsive: latest response interrupts stale speech.
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  toggleTTS(button) {
+    if (!button) {
+      return;
+    }
+    button.textContent = this.ttsEnabled ? "TTS: ON" : "TTS: OFF";
+    button.setAttribute("aria-pressed", this.ttsEnabled ? "true" : "false");
   }
 
   // called each time component is added onto document
@@ -297,6 +360,7 @@ class LiveCoach extends HTMLElement {
   // Displaying Chat Message Funcitonality 
   displayMessage(sender, message, chatElement) {
     if (message) {
+      const originalSender = sender;
       // Determine display label, class and emoji
       let className = '';
       let emoji = '';
@@ -331,6 +395,10 @@ class LiveCoach extends HTMLElement {
       chatElement.scrollTop = chatElement.scrollHeight;
 
       this.history.push({ from: sender, text: message });
+
+      if (originalSender === 'Coach') {
+        this.speakCoachMessage(message);
+      }
     }
   }
 
@@ -355,27 +423,84 @@ class LiveCoach extends HTMLElement {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>
       <div id="message_display"></div>
-      <div style="position:relative; display:inline-block; width:100%;">
-        <input
-          type="text"
-          id="user-input"
-          placeholder="Type your message..."
-          style="padding-right:28px;"
-        />
-        <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
+      <div class="chat-input-row">
+        <div class="chat-input-wrap" style="position:relative; display:inline-block; width:100%;">
+          <input
+            type="text"
+            id="user-input"
+            placeholder="Type your message..."
+            style="padding-right:28px;"
+          />
+          <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
+        </div>
+        <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
       </div>
       <br>
     `;
 
     const playerInput = this.querySelector("#user-input");
     const micIcon = this.querySelector("#mic-icon");
+    const ttsToggleBtn = this.querySelector("#tts-toggle");
+
+    // Text-to-Speech Toggle Functionality
+    this.toggleTTS(ttsToggleBtn);
+
+    const applyTtsToggle = () => {
+      this.ttsEnabled = !this.ttsEnabled;
+      localStorage.setItem("LIVE_COACH_TTS_ENABLED", this.ttsEnabled ? "true" : "false");
+      this.toggleTTS(ttsToggleBtn);
+
+      if (!this.ttsEnabled && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      } else {
+        this.tryPrimeSpeechSynthesis();
+      }
+    };
+
+    ttsToggleBtn?.addEventListener("click", () => {
+      applyTtsToggle();
+    });
+
+    if (window.speechSynthesis) {
+      const voiceInitializer = () => {
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices.length) {
+          return;
+        }
+
+        if (!this.ttsVoiceName) {
+          const preferredVoice = voices.find((voice) => /en-US/i.test(voice.lang)) || voices[0];
+          if (preferredVoice) {
+            this.ttsVoiceName = preferredVoice.name;
+            localStorage.setItem("LIVE_COACH_TTS_VOICE", this.ttsVoiceName);
+          }
+        }
+      };
+
+      voiceInitializer();
+      window.speechSynthesis.addEventListener("voiceschanged", voiceInitializer);
+      this._cleanupTtsVoices = () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", voiceInitializer);
+      };
+
+      const primeTtsHandler = () => {
+        this.tryPrimeSpeechSynthesis();
+        window.removeEventListener("pointerdown", primeTtsHandler);
+      };
+      window.addEventListener("pointerdown", primeTtsHandler);
+      this._cleanupTtsPrime = () => {
+        window.removeEventListener("pointerdown", primeTtsHandler);
+      };
+    }
 
     // Speech Recognition setup
     let recognition = null;
     let isListening = false;
     const micGamepadButtonIndices = [6, 7]; // Standard mapping: left/right triggers (ZL/ZR)
+    const ttsGamepadButtonIndices = [16, 17]; // Commonly guide/home or touchpad/meta buttons
     let keyboardMicHeld = false;
     let gamepadMicHeld = false;
+    let gamepadTtsToggleHeld = false;
     let gamepadPollId = null;
 
     const startMicHold = () => {
@@ -417,6 +542,43 @@ class LiveCoach extends HTMLElement {
       }
     };
 
+    const pollGamepadControls = () => {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gamepad = Array.from(gamepads).find((gp) => gp && gp.connected);
+
+      const micPressed = !!(
+        gamepad &&
+        gamepad.buttons &&
+        micGamepadButtonIndices.some((buttonIndex) => gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed)
+      );
+
+      const ttsTogglePressed = !!(
+        gamepad &&
+        gamepad.buttons &&
+        ttsGamepadButtonIndices.some((buttonIndex) => gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed)
+      );
+
+      if (micPressed && !gamepadMicHeld) {
+        gamepadMicHeld = true;
+        syncMicHoldState();
+      } else if (!micPressed && gamepadMicHeld) {
+        gamepadMicHeld = false;
+        syncMicHoldState();
+      }
+
+      // Edge-detect so TTS toggles once per press, not every animation frame.
+      if (ttsTogglePressed && !gamepadTtsToggleHeld) {
+        gamepadTtsToggleHeld = true;
+        applyTtsToggle();
+      } else if (!ttsTogglePressed && gamepadTtsToggleHeld) {
+        gamepadTtsToggleHeld = false;
+      }
+
+      gamepadPollId = requestAnimationFrame(pollGamepadControls);
+    };
+
+    gamepadPollId = requestAnimationFrame(pollGamepadControls);
+
     if (window.SpeechRecognition || window.webkitSpeechRecognition) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
@@ -437,28 +599,6 @@ class LiveCoach extends HTMLElement {
         isListening = false;
         micIcon.style.display = 'none';
       };
-
-      const pollGamepadMicHold = () => {
-        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-        const gamepad = Array.from(gamepads).find((gp) => gp && gp.connected);
-        const pressed = !!(
-          gamepad &&
-          gamepad.buttons &&
-          micGamepadButtonIndices.some((buttonIndex) => gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed)
-        );
-
-        if (pressed && !gamepadMicHeld) {
-          gamepadMicHeld = true;
-          syncMicHoldState();
-        } else if (!pressed && gamepadMicHeld) {
-          gamepadMicHeld = false;
-          syncMicHoldState();
-        }
-
-        gamepadPollId = requestAnimationFrame(pollGamepadMicHold);
-      };
-
-      gamepadPollId = requestAnimationFrame(pollGamepadMicHold);
     }
 
     // Prevent spacebar from scrolling only when player is focused on game canvas
@@ -501,6 +641,14 @@ class LiveCoach extends HTMLElement {
   disconnectedCallback() {
     if (this._cleanupMicPolling) {
       this._cleanupMicPolling();
+    }
+
+    if (this._cleanupTtsVoices) {
+      this._cleanupTtsVoices();
+    }
+
+    if (this._cleanupTtsPrime) {
+      this._cleanupTtsPrime();
     }
   }
 }
