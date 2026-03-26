@@ -28,7 +28,7 @@ class CoachWhiteboard extends HTMLElement {
   render() {
     this.innerHTML = `
       <div class="whiteboard" id="whiteboard">
-        <div class="whiteboard-placeholder">Whiteboard — the coach can write here</div>
+        <div class="whiteboard-placeholder"></div>
       </div>
     `;
   }

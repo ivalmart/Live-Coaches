@@ -435,7 +435,6 @@ class LiveCoach extends HTMLElement {
         </div>
         <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
       </div>
-      <br>
     `;
 
     const playerInput = this.querySelector("#user-input");
