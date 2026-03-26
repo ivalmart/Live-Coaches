@@ -10,6 +10,12 @@ class SnesEmulator extends HTMLElement {
     this.emulator = null;   // main emulator instance
     this.keyboardInputs = null; // mapping of controller inputs
     this.gamepadInputs = null;   // mapping of gamepad inputs
+    this.gamepadSystemInputs = {
+      fullscreen: {
+        buttonIndices: [17], // Screenshot/Capture on many controllers
+        held: false
+      }
+    };
 
     this.romName = null;    // name of ROM for exporting purposes
     this.romUrl = null;     // ROM url from local assets folder
@@ -69,6 +75,25 @@ class SnesEmulator extends HTMLElement {
     this.emulator.gainNode.gain.value = this.muted ? 0 : 1;
   }
 
+  toggleFullscreen(canvas) {
+    if (!canvas) {
+      return;
+    }
+    if (!document.fullscreenElement) {
+      canvas.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // Utility for app-level gamepad actions that are not SNES inputs.
+  isAnyGamepadButtonPressed(gamepad, buttonIndices) {
+    if (!gamepad || !gamepad.buttons) {
+      return false;
+    }
+    return buttonIndices.some((buttonIndex) => gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed);
+  }
+
   // Initialize emulator using snes.mjs functions
   initEmulator() {
     this.emulator = window.emulator = emulateSnesConsole(
@@ -86,10 +111,10 @@ class SnesEmulator extends HTMLElement {
       1: 2,   // X button
       2: 8,   // Select button
       3: 9,   // Start button
-      4: 12,  // Up on stick
-      5: 13,  // Down on stick
-      6: 14,  // Left on stick
-      7: 15,  // Right on stick
+      4: 12,  // Up on D-pad
+      5: 13,  // Down on D-pad
+      6: 14,  // Left on D-pad
+      7: 15,  // Right on D-pad
       8: 1,   // B button
       9: 3,   // Y button
       10: 4,  // Left bumper trigger
@@ -118,11 +143,7 @@ class SnesEmulator extends HTMLElement {
     const canvas = this.querySelector('canvas');
     canvas.addEventListener('keydown', e => {
       if (e.key === 'f' || e.key === 'F') {
-        if (!document.fullscreenElement) {
-          canvas.requestFullscreen();
-        } else {
-          document.exitFullscreen();
-        }
+        this.toggleFullscreen(canvas);
         e.preventDefault();
         return;
       }
@@ -168,21 +189,27 @@ class SnesEmulator extends HTMLElement {
     }
 
     // gamepads variable stores up to 4 connected controllers, We only care about 1 gamepad for now
+    // Gamepad index 0, first controller connected
+    // WATCH OUT IN CASE CONTROLLER IS INDEX 1
     if(gamepads[0]) {
-      // Map gamepad buttons to SNES controller
+      // Map gamepad buttons to SNES controller in emultoar
       Object.entries(this.gamepadInputs).forEach(([snesIndex, gamepadBtnIndex]) => {
         const keyState = `0,1,0,${snesIndex}`;
         const pressed = gamepads[0].buttons[gamepadBtnIndex] && gamepads[0].buttons[gamepadBtnIndex].pressed;
         this.emulator.input_state[keyState] = pressed ? 1 : 0;
       });
-      // Handle D-pad axes for analog sticks
-      if (gamepads[0].axes && gamepads[0].axes.length >= 2) {
-        const threshold = 0.5;
-        this.emulator.input_state['0,1,0,4'] = gamepads[0].axes[1] < -threshold ? 1 : 0; // Up
-        this.emulator.input_state['0,1,0,5'] = gamepads[0].axes[1] > threshold ? 1 : 0;  // Down
-        this.emulator.input_state['0,1,0,6'] = gamepads[0].axes[0] < -threshold ? 1 : 0; // Left
-        this.emulator.input_state['0,1,0,7'] = gamepads[0].axes[0] > threshold ? 1 : 0;  // Right
+
+      // Map gamepad buttons to UI outside of the game emulator
+      const fullscreenControl = this.gamepadSystemInputs.fullscreen;
+      const fullscreenPressed = this.isAnyGamepadButtonPressed(gamepads[0], fullscreenControl.buttonIndices);
+      if (fullscreenPressed && !fullscreenControl.held) {
+        this.toggleFullscreen(this.querySelector('canvas'));
+        fullscreenControl.held = true;
+      } else if (!fullscreenPressed) {
+        fullscreenControl.held = false;
       }
+    } else {
+      this.gamepadSystemInputs.fullscreen.held = false;
     }
     requestAnimationFrame(this.checkGamepadInput);
   }

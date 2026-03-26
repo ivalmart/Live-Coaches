@@ -373,7 +373,50 @@ class LiveCoach extends HTMLElement {
     // Speech Recognition setup
     let recognition = null;
     let isListening = false;
-    let lastTranscript = "";
+    const micGamepadButtonIndices = [6, 7]; // Standard mapping: left/right triggers (ZL/ZR)
+    let keyboardMicHeld = false;
+    let gamepadMicHeld = false;
+    let gamepadPollId = null;
+
+    const startMicHold = () => {
+      if (!recognition || isListening) {
+        return;
+      }
+      try {
+        recognition.start();
+        isListening = true;
+        micIcon.style.display = 'inline';
+      } catch (err) {
+        // Ignore repeated starts while recognition is already active.
+      }
+    };
+
+    const stopMicHold = () => {
+      if (!recognition) {
+        return;
+      }
+      if (!isListening) {
+        return;
+      }
+      try {
+        recognition.stop();
+      } catch (err) {
+        // Ignore stop race conditions while recognition is ending.
+      }
+      isListening = false;
+      micIcon.style.display = 'none';
+    };
+
+    // For controlling microphone holding functionality (general controls)
+    const syncMicHoldState = () => {
+      const shouldHold = keyboardMicHeld || gamepadMicHeld;
+      if (shouldHold) {
+        startMicHold();
+      } else {
+        stopMicHold();
+      }
+    };
+
     if (window.SpeechRecognition || window.webkitSpeechRecognition) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
@@ -381,8 +424,10 @@ class LiveCoach extends HTMLElement {
       recognition.interimResults = false;
 
       recognition.onresult = (event) => {
-        lastTranscript = event.results[0][0].transcript;
-        playerInput.value = lastTranscript;
+        playerInput.value = event.results[0][0].transcript;
+        // autosend message via mic
+        this.sendChatMessage({ to: "Coach", from: "Player", text: playerInput.value });
+        playerInput.value = '';
       };
       recognition.onerror = (event) => {
         isListening = false;
@@ -392,6 +437,28 @@ class LiveCoach extends HTMLElement {
         isListening = false;
         micIcon.style.display = 'none';
       };
+
+      const pollGamepadMicHold = () => {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        const gamepad = Array.from(gamepads).find((gp) => gp && gp.connected);
+        const pressed = !!(
+          gamepad &&
+          gamepad.buttons &&
+          micGamepadButtonIndices.some((buttonIndex) => gamepad.buttons[buttonIndex] && gamepad.buttons[buttonIndex].pressed)
+        );
+
+        if (pressed && !gamepadMicHeld) {
+          gamepadMicHeld = true;
+          syncMicHoldState();
+        } else if (!pressed && gamepadMicHeld) {
+          gamepadMicHeld = false;
+          syncMicHoldState();
+        }
+
+        gamepadPollId = requestAnimationFrame(pollGamepadMicHold);
+      };
+
+      gamepadPollId = requestAnimationFrame(pollGamepadMicHold);
     }
 
     // Prevent spacebar from scrolling only when player is focused on game canvas
@@ -403,19 +470,15 @@ class LiveCoach extends HTMLElement {
 
     // Listen for spacebar hold/release, only when player is focused on game canvas
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !isListening && recognition && document.activeElement?.tagName === 'CANVAS') {
-        try {
-          recognition.start();
-          isListening = true;
-          micIcon.style.display = 'inline';
-        } catch (err) {}
+      if (e.code === 'Space' && recognition && document.activeElement?.tagName === 'CANVAS') {
+        keyboardMicHeld = true;
+        syncMicHoldState();
       }
     });
     window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && isListening && recognition) {
-        recognition.stop();
-        isListening = false;
-        micIcon.style.display = 'none';
+      if (e.code === 'Space' && recognition) {
+        keyboardMicHeld = false;
+        syncMicHoldState();
       }
     });
 
@@ -424,9 +487,21 @@ class LiveCoach extends HTMLElement {
       if (e.key === 'Enter' && playerInput.value.length > 0) {
         this.sendChatMessage({ to: "Coach", from: "Player", text: playerInput.value });
         playerInput.value = '';
-        lastTranscript = "";
       }
     });
+
+    // Tear down gamepad polling if the component is removed.
+    this._cleanupMicPolling = () => {
+      if (gamepadPollId !== null) {
+        cancelAnimationFrame(gamepadPollId);
+      }
+    };
+  }
+
+  disconnectedCallback() {
+    if (this._cleanupMicPolling) {
+      this._cleanupMicPolling();
+    }
   }
 }
 customElements.define('live-coach', LiveCoach);
