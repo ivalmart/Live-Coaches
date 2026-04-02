@@ -12,7 +12,7 @@ class SnesEmulator extends HTMLElement {
     this.gamepadInputs = null;   // mapping of gamepad inputs
     this.gamepadSystemInputs = {
       fullscreen: {
-        buttonIndices: [17], // Screenshot/Capture on many controllers
+        buttonIndices: [17], // Switch capture button
         held: false
       }
     };
@@ -106,6 +106,7 @@ class SnesEmulator extends HTMLElement {
   initGameControls() {
     // ----- External Gamepad Controller of SNES controller (Switch Pro Controller scheme) -----
     // Gamepad API https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
+    // ONLY for gamepad inputs appropriate for the game emulator, set of other buttons are NOT included in here (e.g., fullscreen and mic toggle)
     this.gamepadInputs = {
       0: 0,   // A button
       1: 2,   // X button

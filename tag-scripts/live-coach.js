@@ -181,6 +181,8 @@ class LiveCoach extends HTMLElement {
       console.warn(error);
     }
 
+    console.log(this._instructions);
+
     this.functionCallTools = {
       get_player_state() {
         const state = document.querySelector('snes-emulator').retrievePlayerState();
@@ -290,12 +292,10 @@ class LiveCoach extends HTMLElement {
       return; // Chat not initialized yet
     }
     if (message) {
-      if (message.from == "Player" || message.from == "Coach") {
-        this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
-      }
+      this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
@@ -372,18 +372,21 @@ class LiveCoach extends HTMLElement {
       } else if (sender === 'Coach') {
         className = 'Coach-name';
         emoji = '';
-      } else if (sender === "FunctionCallResults") {
-        className = 'FunctionCall';
-        sender = '🔧';
-        isFunctionCallMessage = true;
       }
+      // Removing from the style of the study
+
+      // } else if (sender === "FunctionCallResults") {
+      //   className = 'FunctionCall';
+      //   sender = '🔧';
+      //   isFunctionCallMessage = true;
+      // }
 
       const messageElement = document.createElement("div");
       messageElement.className = "chat-message";
-      if (isFunctionCallMessage) {
-        messageElement.classList.add("function-call-message");
-      }
-      // Build the header markup. Only include emoji span if emoji is set.
+      // if (isFunctionCallMessage) {
+      //   messageElement.classList.add("function-call-message");
+      // }
+
       const header = emoji ? `<strong class="${className}"><span class="chat-emoji">${emoji}</span></strong>` : `<strong class="${className}">${sender}:</strong>`;
 
       // Check if message contains HTML (from FunctionCall with collapsible element)
@@ -393,6 +396,11 @@ class LiveCoach extends HTMLElement {
       messageElement.innerHTML = `${header}${parsedMessage}`;
       chatElement.appendChild(messageElement);
       chatElement.scrollTop = chatElement.scrollHeight;
+
+      // Hides Game and FunctionCall messages from the front-end, but saves the history to keep for transcripting the actions gone within the playtest
+      if (sender === "Game" || sender === "FunctionCallResults") {
+        messageElement.style.display = "none";
+      }
 
       this.history.push({ from: sender, text: message });
 
@@ -441,7 +449,7 @@ class LiveCoach extends HTMLElement {
     const micIcon = this.querySelector("#mic-icon");
     const ttsToggleBtn = this.querySelector("#tts-toggle");
 
-    // Text-to-Speech Toggle Functionality
+    // ----- Text-to-Speech Toggle Functionality -----
     this.toggleTTS(ttsToggleBtn);
 
     const applyTtsToggle = () => {
@@ -495,8 +503,8 @@ class LiveCoach extends HTMLElement {
     // Speech Recognition setup
     let recognition = null;
     let isListening = false;
-    const micGamepadButtonIndices = [6, 7]; // Standard mapping: left/right triggers (ZL/ZR)
-    const ttsGamepadButtonIndices = [16, 17]; // Commonly guide/home or touchpad/meta buttons
+    const micGamepadButtonIndices = [6, 7]; // Switch controller mapping: ZL 6 / ZR 7
+    const ttsGamepadButtonIndices = [16]; // Switch home button mapping: 17
     let keyboardMicHeld = false;
     let gamepadMicHeld = false;
     let gamepadTtsToggleHeld = false;
