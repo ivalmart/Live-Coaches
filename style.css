@@ -42,9 +42,87 @@ canvas { /* used for adjusting the emulator screen */
   border-radius: 5px;
 }
 .emu_style {
+  position: relative;
   border-radius: 5px;
   padding: 0;
   margin: 0;
+}
+
+.emu_style:fullscreen,
+.emu_style:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.emu_style:fullscreen #emulator,
+.emu_style:-webkit-full-screen #emulator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.emu_style:fullscreen canvas,
+.emu_style:-webkit-full-screen canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  max-width: none;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+}
+
+#fullscreen-caption-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vh;
+  pointer-events: none;
+  z-index: 20;
+  padding: 0 3vw;
+  box-sizing: border-box;
+}
+
+.fullscreen-caption {
+  max-width: min(92vw, 1600px);
+  font-size: clamp(16px, 2.4vw, 38px);
+  line-height: 1.2;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.56);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 0.42em 0.75em;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.fullscreen-caption.player-caption {
+  border-color: rgba(146, 4, 255, 0.9);
+}
+
+.fullscreen-caption.coach-caption {
+  border-color: rgba(10, 213, 17, 0.9);
+}
+
+.fullscreen-caption.fade-out {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .mapping {

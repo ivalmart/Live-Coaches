@@ -26,6 +26,7 @@ class SnesEmulator extends HTMLElement {
 
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
     this.SAVE_SLOTS = new Array(10); // 10 save slots by default, will preload 4-9
+    this._captionTimers = new Map();
   }
 
   // called each time component is added onto document
@@ -76,14 +77,117 @@ class SnesEmulator extends HTMLElement {
   }
 
   toggleFullscreen(canvas) {
-    if (!canvas) {
+    const fullscreenHost = this.querySelector('.emu_style') || canvas;
+    if (!fullscreenHost) {
       return;
     }
     if (!document.fullscreenElement) {
-      canvas.requestFullscreen();
+      fullscreenHost.requestFullscreen();
     } else {
       document.exitFullscreen();
     }
+  }
+
+  isInFullscreenMode() {
+    const fullscreenElement = document.fullscreenElement;
+    if (!fullscreenElement) {
+      return false;
+    }
+    return fullscreenElement === this || this.contains(fullscreenElement) || fullscreenElement.contains(this);
+  }
+
+  clearCaptionTimers(captionKey) {
+    const timers = this._captionTimers.get(captionKey);
+    if (!timers) {
+      return;
+    }
+    if (timers.fadeTimer) {
+      clearTimeout(timers.fadeTimer);
+    }
+    if (timers.removeTimer) {
+      clearTimeout(timers.removeTimer);
+    }
+    this._captionTimers.delete(captionKey);
+  }
+
+  scheduleCaptionDismiss(captionEl, captionKey, lingerMs) {
+    if (!captionEl || !captionEl.parentNode) {
+      return;
+    }
+
+    this.clearCaptionTimers(captionKey);
+    const safeLingerMs = Math.max(0, Number(lingerMs) || 0);
+    const fadeDelay = Math.max(0, safeLingerMs - 400);
+
+    const fadeTimer = window.setTimeout(() => {
+      captionEl.classList.add('fade-out');
+    }, fadeDelay);
+
+    const removeTimer = window.setTimeout(() => {
+      if (captionEl.parentNode) {
+        captionEl.parentNode.removeChild(captionEl);
+      }
+      this._captionTimers.delete(captionKey);
+    }, safeLingerMs);
+
+    this._captionTimers.set(captionKey, { fadeTimer, removeTimer });
+  }
+
+  showFullscreenCaption({ speaker, text, captionKey, lingerMs = 3000, holdUntilDismiss = false }) {
+    if (!this.isInFullscreenMode()) {
+      return;
+    }
+
+    const captionLayer = this.querySelector('#fullscreen-caption-layer');
+    if (!captionLayer || !text) {
+      return;
+    }
+
+    const resolvedKey = captionKey || `${speaker}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let caption = captionLayer.querySelector(`[data-caption-key="${resolvedKey}"]`);
+    if (!caption) {
+      caption = document.createElement('div');
+      caption.className = 'fullscreen-caption';
+      caption.dataset.captionKey = resolvedKey;
+      captionLayer.appendChild(caption);
+    }
+
+    caption.classList.remove('fade-out', 'player-caption', 'coach-caption');
+    caption.classList.add(speaker === 'Coach' ? 'coach-caption' : 'player-caption');
+    caption.textContent = `${speaker}: ${text}`;
+
+    while (captionLayer.children.length > 2) {
+      const oldestCaption = captionLayer.firstChild;
+      if (oldestCaption && oldestCaption.dataset && oldestCaption.dataset.captionKey) {
+        this.clearCaptionTimers(oldestCaption.dataset.captionKey);
+      }
+      captionLayer.removeChild(oldestCaption);
+    }
+
+    if (holdUntilDismiss) {
+      this.clearCaptionTimers(resolvedKey);
+      return resolvedKey;
+    }
+
+    this.scheduleCaptionDismiss(caption, resolvedKey, lingerMs);
+    return resolvedKey;
+  }
+
+  dismissFullscreenCaption(captionKey, lingerMs = 1000) {
+    if (!captionKey) {
+      return;
+    }
+    const captionLayer = this.querySelector('#fullscreen-caption-layer');
+    if (!captionLayer) {
+      return;
+    }
+
+    const caption = captionLayer.querySelector(`[data-caption-key="${captionKey}"]`);
+    if (!caption) {
+      return;
+    }
+
+    this.scheduleCaptionDismiss(caption, captionKey, lingerMs);
   }
 
   // Utility for app-level gamepad actions that are not SNES inputs.
@@ -347,6 +451,7 @@ class SnesEmulator extends HTMLElement {
           <button id="import">Import State</button>
         </div>
         <div id="emulator"></div>
+        <div id="fullscreen-caption-layer" aria-live="polite" aria-atomic="false"></div>
       </div>
     `;
   }

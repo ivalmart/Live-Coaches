@@ -47,6 +47,8 @@ class LiveCoach extends HTMLElement {
     this.ttsEnabled = localStorage.getItem("LIVE_COACH_TTS_ENABLED") === "true";
     this.ttsVoiceName = localStorage.getItem("LIVE_COACH_TTS_VOICE") || "";
     this.ttsHasPrimed = false;
+    this.coachCaptionKey = "coach-live-caption";
+    this.activeCoachSpeechToken = 0;
   }
 
   getCoachSpeechText(rawMessage) {
@@ -83,6 +85,7 @@ class LiveCoach extends HTMLElement {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
+    const speechToken = ++this.activeCoachSpeechToken;
     utterance.rate = 1.02;
     utterance.pitch = 1.0;
 
@@ -95,8 +98,70 @@ class LiveCoach extends HTMLElement {
     }
 
     // Keep coaching responsive: latest response interrupts stale speech.
+    utterance.onstart = () => {
+      this.showFullscreenCaption('Coach', rawMessage, { holdUntilDismiss: true });
+    };
+
+    utterance.onend = () => {
+      if (speechToken !== this.activeCoachSpeechToken) {
+        return;
+      }
+      const snes = document.querySelector('snes-emulator');
+      if (snes && typeof snes.dismissFullscreenCaption === 'function') {
+        snes.dismissFullscreenCaption(this.coachCaptionKey, 1200);
+      }
+    };
+
+    utterance.onerror = () => {
+      if (speechToken !== this.activeCoachSpeechToken) {
+        return;
+      }
+      const snes = document.querySelector('snes-emulator');
+      if (snes && typeof snes.dismissFullscreenCaption === 'function') {
+        snes.dismissFullscreenCaption(this.coachCaptionKey, 900);
+      }
+    };
+
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+  }
+
+  estimateSpeechDurationMs(text) {
+    if (!text) {
+      return 3000;
+    }
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const wordsPerMinute = 170;
+    const msPerWord = 60000 / wordsPerMinute;
+    const estimatedSpeechMs = words * msPerWord;
+    return Math.min(12000, Math.max(3000, Math.round(estimatedSpeechMs + 1200)));
+  }
+
+  showFullscreenCaption(sender, rawMessage, options = {}) {
+    if (!rawMessage || (sender !== 'Player' && sender !== 'Coach')) {
+      return;
+    }
+
+    const snes = document.querySelector('snes-emulator');
+    if (!snes || typeof snes.showFullscreenCaption !== 'function') {
+      return;
+    }
+
+    const text = sender === 'Coach' ? this.getCoachSpeechText(rawMessage) : String(rawMessage).trim();
+    if (!text) {
+      return;
+    }
+
+    const hasSpeechSynthesis = !!window.speechSynthesis;
+    const shouldPinCoachCaption = sender === 'Coach' && this.ttsEnabled && hasSpeechSynthesis;
+
+    snes.showFullscreenCaption({
+      speaker: sender,
+      text,
+      captionKey: sender === 'Coach' ? this.coachCaptionKey : undefined,
+      holdUntilDismiss: options.holdUntilDismiss || shouldPinCoachCaption,
+      lingerMs: sender === 'Player' ? 3000 : this.estimateSpeechDurationMs(text)
+    });
   }
 
   toggleTTS(button) {
@@ -403,6 +468,10 @@ class LiveCoach extends HTMLElement {
       }
 
       this.history.push({ from: sender, text: message });
+
+      if (originalSender === 'Player' || originalSender === 'Coach') {
+        this.showFullscreenCaption(originalSender, message);
+      }
 
       if (originalSender === 'Coach') {
         this.speakCoachMessage(message);
