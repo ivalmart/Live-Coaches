@@ -14,11 +14,11 @@ main {
 /* Page Layout */
 .main-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(340px, 33vw, 500px);
+  grid-template-columns: minmax(0, 1fr) clamp(400px, 35vw, 700px);
   gap: 8px;
-  max-width: 1700px;
-  margin: 0 auto;
-  padding: 8px 10px;
+  max-width: none;
+  margin: 0;
+  padding: 6px;
   box-sizing: border-box;
   align-items: stretch;
   min-height: 100vh;
@@ -116,16 +116,16 @@ snes-emulator canvas {
 }
 
 .fullscreen-caption {
-  max-width: min(92vw, 1600px);
-  font-size: clamp(16px, 2.4vw, 38px);
-  line-height: 1.2;
+  max-width: min(82vw, 1200px);
+  font-size: clamp(13px, 1.45vw, 30px);
+  line-height: 1.15;
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
   background: rgba(0, 0, 0, 0.56);
   border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 0.42em 0.75em;
+  border-radius: 10px;
+  padding: 0.28em 0.55em;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.35s ease, transform 0.35s ease;
@@ -161,7 +161,7 @@ snes-emulator canvas {
 
 /* Chatbot style*/
 #message_display {
-  font-size: 14px;
+  font-size: 16px;
   flex: 1;
   min-height: 260px;
   overflow-y: scroll;
@@ -212,14 +212,14 @@ snes-emulator canvas {
 
 #message_display .function-call-summary {
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
 
 #message_display .function-call-content {
   margin: 8px 0 2px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
   color: #444;
   white-space: pre-wrap;
@@ -242,7 +242,7 @@ snes-emulator canvas {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 14px;
   box-sizing: border-box;
 }
 
@@ -261,7 +261,7 @@ snes-emulator canvas {
 
 .tts-btn {
   background: #135f8b;
-  font-size: 12px;
+  font-size: 13px;
   padding: 0.35em 0.75em;
   margin: 0;
   margin-bottom: 0;
@@ -270,6 +270,21 @@ snes-emulator canvas {
 }
 
 .tts-btn[aria-pressed="true"] {
+  background: #0e8b4a;
+}
+
+.control-btn {
+  background: #135f8b;
+  font-size: 13px;
+  padding: 0.35em 0.75em;
+  margin: 0;
+  margin-bottom: 0;
+  margin-right: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.control-btn[aria-pressed="true"] {
   background: #0e8b4a;
 }
 
@@ -350,7 +365,7 @@ coach-whiteboard {
 
 @media (max-width: 1200px) {
   .main-layout {
-    grid-template-columns: minmax(0, 1fr) clamp(310px, 36vw, 440px);
+    grid-template-columns: minmax(0, 1fr) clamp(330px, 38vw, 470px);
   }
 
   #message_display {

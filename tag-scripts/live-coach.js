@@ -49,6 +49,9 @@ class LiveCoach extends HTMLElement {
     this.ttsHasPrimed = false;
     this.coachCaptionKey = "coach-live-caption";
     this.activeCoachSpeechToken = 0;
+
+    // Function call visibility toggle
+    this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
   }
 
   buildFunctionResponsePayload(result) {
@@ -219,6 +222,14 @@ class LiveCoach extends HTMLElement {
     }
     button.textContent = this.ttsEnabled ? "TTS: ON" : "TTS: OFF";
     button.setAttribute("aria-pressed", this.ttsEnabled ? "true" : "false");
+  }
+
+  updateFunctionCallsToggle(button) {
+    if (!button) {
+      return;
+    }
+    button.textContent = this.functionCallsVisible ? "FC Show: ON" : "FC Show: OFF";
+    button.setAttribute("aria-pressed", this.functionCallsVisible ? "true" : "false");
   }
 
   // called each time component is added onto document
@@ -556,6 +567,11 @@ class LiveCoach extends HTMLElement {
         messageElement.style.display = "none";
       }
 
+      // Hide FunctionCall messages if toggle is off
+      if(sender === "FunctionCallResults" && !this.functionCallsVisible) {
+        messageElement.style.display = "none";
+      }
+
       this.history.push({ from: sender, text: message });
 
       if (originalSender === 'Player' || originalSender === 'Coach') {
@@ -599,13 +615,37 @@ class LiveCoach extends HTMLElement {
           />
           <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
         </div>
+        <button id="function-calls-toggle" type="button" class="control-btn" aria-pressed="true">Function Calls: ON</button>
         <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
       </div>
     `;
 
     const playerInput = this.querySelector("#user-input");
     const micIcon = this.querySelector("#mic-icon");
+    const functionCallsToggleBtn = this.querySelector("#function-calls-toggle");
     const ttsToggleBtn = this.querySelector("#tts-toggle");
+
+    // ----- Function Calls Visibility Toggle Functionality -----
+    this.updateFunctionCallsToggle(functionCallsToggleBtn);
+
+    const applyFunctionCallsToggle = () => {
+      this.functionCallsVisible = !this.functionCallsVisible;
+      localStorage.setItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE", this.functionCallsVisible ? "true" : "false");
+      this.updateFunctionCallsToggle(functionCallsToggleBtn);
+      
+      // Update visibility of existing function call messages
+      const messageDisplay = this.querySelector("#message_display");
+      messageDisplay.querySelectorAll(".chat-message").forEach(msg => {
+        const isFromFunctionCall = msg.innerHTML.includes("function-call-details");
+        if (isFromFunctionCall) {
+          msg.style.display = this.functionCallsVisible ? "" : "none";
+        }
+      });
+    };
+
+    functionCallsToggleBtn?.addEventListener("click", () => {
+      applyFunctionCallsToggle();
+    });
 
     // ----- Text-to-Speech Toggle Functionality -----
     this.toggleTTS(ttsToggleBtn);
