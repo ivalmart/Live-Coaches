@@ -3,6 +3,7 @@ body {
   background-color: #dbd5d5;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
 main {
@@ -13,39 +14,57 @@ main {
 /* Page Layout */
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 480px;
-  gap: 6px;
-  max-width: 1500px;
-  padding: 0 16px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 33vw, 500px);
+  gap: 8px;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 8px 10px;
   box-sizing: border-box;
-  align-items: start;
+  align-items: stretch;
+  min-height: 100vh;
 }
 
 .left-panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .right-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   box-sizing: border-box;
   overflow: hidden;
   min-width: 0;
+  min-height: 0;
+}
+
+snes-emulator {
+  display: block;
+  width: 100%;
 }
 
 /* Game Emulator Canvas Style */
-canvas { /* used for adjusting the emulator screen */
-  width: 97%;
+snes-emulator canvas {
+  display: block;
+  width: min(100%, calc((100vh - 20px) * 256 / 224));
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 20px);
+  aspect-ratio: 256 / 224;
   border: thick solid rgb(221, 125, 0);
   border-radius: 5px;
+  box-sizing: border-box;
+  margin: 0 auto;
 }
 .emu_style {
   position: relative;
   border-radius: 5px;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
 
 .emu_style:fullscreen,
@@ -142,8 +161,9 @@ canvas { /* used for adjusting the emulator screen */
 
 /* Chatbot style*/
 #message_display {
-  font-size: 12px;
-  height: 500px;
+  font-size: 14px;
+  flex: 1;
+  min-height: 260px;
   overflow-y: scroll;
   overflow-x: auto;
   border: 1px solid #757575;
@@ -156,7 +176,7 @@ canvas { /* used for adjusting the emulator screen */
   word-break: break-word;
   white-space: pre-wrap;
   background-color: #ffffff;
-  line-height: 1.1;
+  line-height: 1.35;
   box-sizing: border-box;
 }
 #message_display div {
@@ -192,14 +212,14 @@ canvas { /* used for adjusting the emulator screen */
 
 #message_display .function-call-summary {
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #333;
 }
 
 #message_display .function-call-content {
   margin: 8px 0 2px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
   color: #444;
   white-space: pre-wrap;
@@ -222,7 +242,7 @@ canvas { /* used for adjusting the emulator screen */
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 13px;
   box-sizing: border-box;
 }
 
@@ -241,7 +261,7 @@ canvas { /* used for adjusting the emulator screen */
 
 .tts-btn {
   background: #135f8b;
-  font-size: 11px;
+  font-size: 12px;
   padding: 0.35em 0.75em;
   margin: 0;
   margin-bottom: 0;
@@ -279,8 +299,11 @@ button {
 }
 
 live-coach {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  min-height: 0;
+  flex: 3 1 0;
   box-sizing: border-box;
 }
 
@@ -290,10 +313,13 @@ live-coach {
 coach-whiteboard {
   display: block;
   width: 100%;
+  flex: 2 1 0;
+  min-height: 0;
 }
 
 .whiteboard {
-  height: 280px;
+  height: 100%;
+  min-height: clamp(250px, 32vh, 420px);
   width: 100%;
   background: #ffffff;
   color: #000;
@@ -320,6 +346,46 @@ coach-whiteboard {
 #whiteboard-map {
   width: 100%;
   height: 100%;
+}
+
+@media (max-width: 1200px) {
+  .main-layout {
+    grid-template-columns: minmax(0, 1fr) clamp(310px, 36vw, 440px);
+  }
+
+  #message_display {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 980px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  snes-emulator canvas {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .right-panel {
+    overflow: visible;
+  }
+
+  live-coach {
+    flex-basis: auto;
+  }
+
+  #message_display {
+    min-height: 48vh;
+    max-height: 62vh;
+  }
+
+  .whiteboard {
+    min-height: 220px;
+  }
 }
 
 /* Ablation Study Toggle Controls */

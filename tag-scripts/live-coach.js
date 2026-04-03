@@ -440,7 +440,7 @@ class LiveCoach extends HTMLElement {
       this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
 
       try {
-        // return;
+        return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
