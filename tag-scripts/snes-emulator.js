@@ -190,6 +190,99 @@ class SnesEmulator extends HTMLElement {
     this.scheduleCaptionDismiss(caption, captionKey, lingerMs);
   }
 
+  captureCoachScreenshot({ detailLevel = "normal" } = {}) {
+    const sourceCanvas = this.querySelector("canvas");
+    if (!sourceCanvas) {
+      return { ok: false, error: "Emulator canvas not available." };
+    }
+
+    const sourceWidth = Number(sourceCanvas.width || sourceCanvas.clientWidth || 0);
+    const sourceHeight = Number(sourceCanvas.height || sourceCanvas.clientHeight || 0);
+    if (!sourceWidth || !sourceHeight) {
+      return { ok: false, error: "Emulator canvas has invalid dimensions." };
+    }
+
+    const detailProfile = detailLevel === "detailed"
+      ? { maxDimension: 512, maxBytes: 550 * 1024 }
+      : { maxDimension: 384, maxBytes: 350 * 1024 };
+
+    const scale = Math.min(1, detailProfile.maxDimension / Math.max(sourceWidth, sourceHeight));
+    const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+    const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+    const scaledCanvas = document.createElement("canvas");
+    scaledCanvas.width = targetWidth;
+    scaledCanvas.height = targetHeight;
+
+    const context = scaledCanvas.getContext("2d");
+    if (!context) {
+      return { ok: false, error: "Unable to create screenshot rendering context." };
+    }
+    context.imageSmoothingEnabled = false;
+    context.drawImage(sourceCanvas, 0, 0, targetWidth, targetHeight);
+
+    const estimateBytes = (dataUrl) => {
+      const commaIndex = dataUrl.indexOf(",");
+      if (commaIndex === -1) {
+        return 0;
+      }
+      return Math.ceil(((dataUrl.length - commaIndex - 1) * 3) / 4);
+    };
+
+    const getMimeTypeFromDataUrl = (dataUrl, fallbackMimeType) => {
+      const mimeMatch = dataUrl.match(/^data:([^;]+);base64,/i);
+      return mimeMatch && mimeMatch[1] ? mimeMatch[1] : fallbackMimeType;
+    };
+
+    const pickBestEncoding = () => {
+      const candidates = [
+        { mimeType: "image/png" },
+        { mimeType: "image/webp", quality: 0.82 },
+        { mimeType: "image/jpeg", quality: 0.78 },
+      ];
+
+      let smallest = null;
+      for (const candidate of candidates) {
+        const dataUrl = scaledCanvas.toDataURL(candidate.mimeType, candidate.quality);
+        const estimatedBytes = estimateBytes(dataUrl);
+        const result = {
+          dataUrl,
+          mimeType: getMimeTypeFromDataUrl(dataUrl, candidate.mimeType),
+          byteLength: estimatedBytes,
+        };
+        if (!smallest || estimatedBytes < smallest.byteLength) {
+          smallest = result;
+        }
+        if (estimatedBytes <= detailProfile.maxBytes) {
+          return result;
+        }
+      }
+
+      return smallest;
+    };
+
+    const encodedScreenshot = pickBestEncoding();
+    if (!encodedScreenshot || !encodedScreenshot.dataUrl) {
+      return { ok: false, error: "Failed to encode screenshot." };
+    }
+
+    const encodedParts = encodedScreenshot.dataUrl.split(",", 2);
+    if (encodedParts.length !== 2) {
+      return { ok: false, error: "Screenshot encoding format was invalid." };
+    }
+
+    return {
+      ok: true,
+      detailLevel,
+      width: targetWidth,
+      height: targetHeight,
+      mimeType: encodedScreenshot.mimeType,
+      byteLength: encodedScreenshot.byteLength,
+      data: encodedParts[1],
+      wasDownscaled: scale < 1,
+    };
+  }
+
   // Utility for app-level gamepad actions that are not SNES inputs.
   isAnyGamepadButtonPressed(gamepad, buttonIndices) {
     if (!gamepad || !gamepad.buttons) {

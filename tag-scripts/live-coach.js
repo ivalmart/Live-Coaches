@@ -51,6 +51,55 @@ class LiveCoach extends HTMLElement {
     this.activeCoachSpeechToken = 0;
   }
 
+  buildFunctionResponsePayload(result) {
+    let responseText;
+    let parts = [];
+
+    if (result && typeof result === "object") {
+      if (Array.isArray(result.parts)) {
+        parts = result.parts.filter((part) => part && typeof part === "object");
+      }
+      if (typeof result.responseText === "string") {
+        responseText = result.responseText;
+      }
+    }
+
+    if (responseText === undefined) {
+      responseText = typeof result === "string" ? result : JSON.stringify(result);
+    }
+
+    return {
+      response: { text: responseText },
+      parts,
+    };
+  }
+
+  summarizeFunctionResult(result) {
+    if (!result || typeof result !== "object") {
+      return result;
+    }
+
+    if (Array.isArray(result.parts)) {
+      return {
+        ...result,
+        parts: result.parts.map((part) => {
+          if (!part || !part.inlineData || typeof part.inlineData.data !== "string") {
+            return part;
+          }
+          return {
+            ...part,
+            inlineData: {
+              ...part.inlineData,
+              data: `<base64 ${part.inlineData.data.length} chars>`,
+            },
+          };
+        }),
+      };
+    }
+
+    return result;
+  }
+
   getCoachSpeechText(rawMessage) {
     if (!rawMessage) {
       return "";
@@ -337,6 +386,37 @@ class LiveCoach extends HTMLElement {
 
         return coordinalDirection;
       },
+      capture_game_screenshot({ detail_level } = {}) {
+        try {
+          const snes = document.querySelector('snes-emulator');
+          if (!snes) {
+            return "Error: <snes-emulator> element not found.";
+          }
+          if (typeof snes.captureCoachScreenshot !== 'function') {
+            return "Error: Screenshot capture is not available in the emulator.";
+          }
+
+          const chosenDetailLevel = detail_level === "detailed" ? "detailed" : "normal";
+          const screenshot = snes.captureCoachScreenshot({ detailLevel: chosenDetailLevel });
+          if (!screenshot || !screenshot.ok) {
+            return `Error: ${screenshot && screenshot.error ? screenshot.error : "Unable to capture screenshot."}`;
+          }
+
+          return {
+            responseText: `Screenshot captured (${screenshot.width}x${screenshot.height}, ${screenshot.mimeType}, ${screenshot.byteLength} bytes, detail=${chosenDetailLevel}).`,
+            parts: [
+              {
+                inlineData: {
+                  mimeType: screenshot.mimeType,
+                  data: screenshot.data,
+                },
+              },
+            ],
+          };
+        } catch (error) {
+          return "Error: " + (error && error.message ? error.message : error);
+        }
+      },
       set_whiteboard_content({msg}) {
         try {
           const whiteboard = document.querySelector('coach-whiteboard');
@@ -388,7 +468,8 @@ class LiveCoach extends HTMLElement {
                 fc_Title.className = "function-call-summary";
                 contents.className = "function-call-content";
                 fc_Title.textContent = call.name;
-                contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(result);
+                const summarizedResult = this.summarizeFunctionResult(result);
+                contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(summarizedResult);
                 collapsibleResults.appendChild(fc_Title);
                 collapsibleResults.appendChild(contents);
 
@@ -396,18 +477,25 @@ class LiveCoach extends HTMLElement {
                 messageContainer.appendChild(collapsibleResults);
                 this.displayMessage("FunctionCallResults", messageContainer.innerHTML, this.querySelector("#message_display"));
 
-                functionResponseParts.push({
+                const payload = this.buildFunctionResponsePayload(result);
+                const functionResponsePart = {
                   functionResponse: {
                     name: call.name,
-                    response: { text: result}
+                    response: payload.response,
                   },
-                });
+                };
+
+                if (payload.parts.length) {
+                  functionResponsePart.functionResponse.parts = payload.parts;
+                }
+
+                functionResponseParts.push(functionResponsePart);
               }
             }
 
-            if (functionResponseParts) {
+            if (functionResponseParts.length) {
               response = await this._chat.sendMessage({
-                message: JSON.stringify(functionResponseParts),
+                message: functionResponseParts,
               });
 
               this.displayMessage("Coach", response.text, this.querySelector("#message_display"));
@@ -463,7 +551,8 @@ class LiveCoach extends HTMLElement {
       chatElement.scrollTop = chatElement.scrollHeight;
 
       // Hides Game and FunctionCall messages from the front-end, but saves the history to keep for transcripting the actions gone within the playtest
-      if (sender === "Game" || sender === "FunctionCallResults") {
+      // if (sender === "Game" || sender === "FunctionCallResults") {
+      if(sender === "Game") {
         messageElement.style.display = "none";
       }
 

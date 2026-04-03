@@ -10,6 +10,22 @@
     "included_ablation": ["liveness"]
   },
   {
+    "name": "capture_game_screenshot",
+    "description": "Captures a screenshot of the current emulator frame for visual coaching. Keep usage selective and request 'detailed' only when the default image is insufficient.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "detail_level": {
+          "type": "string",
+          "description": "Screenshot detail level. Use 'normal' for most requests and 'detailed' only for hard-to-see details.",
+          "enum": ["normal", "detailed"]
+        }
+      },
+      "required": []
+    },
+    "included_ablation": ["liveness"]
+  },
+  {
     "name": "save_to_slot",
     "description": "saves the current state of the game emulator to the numbered slot index (it is a good idea to save the state of the game when the player makes important progress like collecting an item or leaving the first room)",
     "parameters": {
@@ -98,7 +114,7 @@
   },
   {
     "name": "direction_to_goal",
-    "description": "Takes in a set of x,y coordinates from the goal node and returns the direction vector from the player's current position to the given goal parameter. Use this to give the player a sense of which direction they should be moving in to get closer to their goal. Note that the coordinate system has x positive going to the right and y positive going down.",
+    "description": "Takes in a set of x,y coordinates from the goal node and returns the direction vector from the player's current position to the given goal parameter. Use this to give the player a sense of which direction they should be moving in to get closer to their goal. Note that the coordinate system has x positive going to the right and y positive going down. IMPORTANT: do not give spatial directions like 'left' or 'right' or 'up' or 'down' in your response without calling this tool first to do the correct spatial reasoning.",
     "parameters": {
       "type": "object",
       "properties": {
