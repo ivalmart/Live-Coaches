@@ -29,6 +29,8 @@ class SnesEmulator extends HTMLElement {
     this.stateBytes = null; // transformed bytes of loaded save state
 
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
+    this.lastCoachPushGameMinute = null; // absolute in-game minute when the last coach update was sent
+    this.livenessEnvironments = new Set(["Live-Coach", "Liveness-Only"]);
     this.SAVE_SLOTS = new Array(10); // 10 save slots by default, will preload 4-9
     this._captionTimers = new Map();
     this.fullscreenCaptionsStorageKey = "LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED";
@@ -553,6 +555,21 @@ class SnesEmulator extends HTMLElement {
   }
 
   // ----- Player State Functionality -----
+  getAbsoluteGameMinute(hours = 0, minutes = 0) {
+    return (Number(hours) * 60) + Number(minutes);
+  }
+
+  getComparablePlayerState(playerState = {}) {
+    const { gameTimeHours, gameTimeMinutes, ...rest } = playerState;
+    return rest;
+  }
+
+  isCurrentEnvironmentLivenessEnabled() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentEnvironment = urlParams.get('Env');
+    return this.livenessEnvironments.has(currentEnvironment);
+  }
+
   retrievePlayerState() {
     if(this.romName == "SuperMetroid") {
       const dv = this.callDataView();
@@ -565,22 +582,57 @@ class SnesEmulator extends HTMLElement {
         inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
         closestNode: map_closestNode,
         gameTimeHours: dv.getUint16(0x09E0, true),   // $09E0: game time hours (0-99)
-        gameTimeMinutes: (() => {
-          const GRANULARITY = 2; // minutes — increase to coarsen how often the coach sees a timer change
-          return Math.floor(dv.getUint16(0x09DE, true) / GRANULARITY) * GRANULARITY;
-        })(),
+        gameTimeMinutes: dv.getUint16(0x09DE, true),
       };
     }
   }
   updatePlayerState() {
     const newState = this.retrievePlayerState();
-    if( JSON.stringify(newState) !== JSON.stringify(this.playerState) ) {
-      this.playerState = newState;
-      // Ablation study: only auto-push state when liveness is enabled
-      const liveCoach = document.querySelector('live-coach');
-      if (liveCoach && liveCoach.ablationSettings.liveness) {
-        liveCoach.sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
-      }
+    if (!newState) {
+      return;
+    }
+
+    const previousState = this.playerState || {};
+    const hasAnyStateChange = JSON.stringify(newState) !== JSON.stringify(previousState);
+    if (!hasAnyStateChange) {
+      return;
+    }
+
+    this.playerState = newState;
+
+    // Ablation study: only auto-push state in liveness-enabled environments.
+    if (!this.isCurrentEnvironmentLivenessEnabled()) {
+      return;
+    }
+
+    // Secondary guard from <live-coach> settings for safety.
+    const liveCoach = document.querySelector('live-coach');
+    if (!(liveCoach && liveCoach.ablationSettings.liveness)) {
+      return;
+    }
+
+    const comparableNew = this.getComparablePlayerState(newState);
+    const comparablePrevious = this.getComparablePlayerState(previousState);
+    const hasNonTimeStateChange = JSON.stringify(comparableNew) !== JSON.stringify(comparablePrevious);
+
+    const currentAbsoluteMinute = this.getAbsoluteGameMinute(
+      newState.gameTimeHours,
+      newState.gameTimeMinutes
+    );
+
+    if (this.lastCoachPushGameMinute !== null && currentAbsoluteMinute < this.lastCoachPushGameMinute) {
+      // Save-state loads can move game time backwards. Reset the baseline so the inactivity timer remains sane.
+      this.lastCoachPushGameMinute = currentAbsoluteMinute;
+    }
+
+    const elapsedSinceLastCoachPush = this.lastCoachPushGameMinute === null
+      ? Number.POSITIVE_INFINITY
+      : currentAbsoluteMinute - this.lastCoachPushGameMinute;
+    const reachedInactivityThreshold = elapsedSinceLastCoachPush >= 2; // 2 minute timer
+
+    if (hasNonTimeStateChange || reachedInactivityThreshold) {
+      liveCoach.sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
+      this.lastCoachPushGameMinute = currentAbsoluteMinute;
     }
   }
 

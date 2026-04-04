@@ -39,6 +39,8 @@ class LiveCoach extends HTMLElement {
     this.gameName = "";
     this.gamePrompt = "";
     this.geminiInit = false;
+    this.currentEnvironment = null;
+    this.livenessEnvironments = new Set(["Live-Coach", "Liveness-Only"]);
 
     this.ablationSettings = { liveness: false, coachness: false };
     this.ablationFunctions = [];
@@ -260,6 +262,7 @@ class LiveCoach extends HTMLElement {
   async initAblationSettings() {
     const urlParams = new URLSearchParams(window.location.search);
     const CURRENT_ENVIRONMENT = urlParams.get('Env');
+    this.currentEnvironment = CURRENT_ENVIRONMENT;
     switch (CURRENT_ENVIRONMENT) {
       case "Live-Coach":
         this.ablationSettings = { liveness: true, coachness: true };
@@ -465,11 +468,22 @@ class LiveCoach extends HTMLElement {
       console.warn("Tried to send message before chat was initialized:", message);
       return; // Chat not initialized yet
     }
+    if (!message) {
+      return;
+    }
+
+    const isGameMessage = message.from === "Game";
+    const isLivenessEnvironment = this.livenessEnvironments.has(this.currentEnvironment);
+    const isLivenessEnabled = !!(this.ablationSettings && this.ablationSettings.liveness);
+    if (isGameMessage && (!isLivenessEnvironment || !isLivenessEnabled)) {
+      return;
+    }
+
     if (message) {
       this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
 
       try {
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
@@ -580,10 +594,9 @@ class LiveCoach extends HTMLElement {
       chatElement.scrollTop = chatElement.scrollHeight;
 
       // Hides Game and FunctionCall messages from the front-end, but saves the history to keep for transcripting the actions gone within the playtest
-      // if (sender === "Game" || sender === "FunctionCallResults") {
-      if(sender === "Game") {
-        messageElement.style.display = "none";
-      }
+      // if(sender === "Game") {
+      //   messageElement.style.display = "none";
+      // }
 
       // Hide FunctionCall messages if toggle is off
       if(sender === "FunctionCallResults" && !this.functionCallsVisible) {
