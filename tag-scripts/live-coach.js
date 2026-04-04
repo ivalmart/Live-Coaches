@@ -52,6 +52,8 @@ class LiveCoach extends HTMLElement {
     this.coachCaptionKey = "coach-live-caption";
     this.activeCoachSpeechToken = 0;
     this.fullscreenCaptionsEnabled = localStorage.getItem("LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED") !== "false";
+    this.isMicPriorityActive = false;
+    this.pendingCoachSpeechMessage = null;
 
     // Function call visibility toggle
     this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
@@ -134,6 +136,11 @@ class LiveCoach extends HTMLElement {
       return;
     }
 
+    if (this.isMicPriorityActive) {
+      this.pendingCoachSpeechMessage = rawMessage;
+      return;
+    }
+
     const text = this.getCoachSpeechText(rawMessage);
     if (!text) {
       return;
@@ -179,6 +186,16 @@ class LiveCoach extends HTMLElement {
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+  }
+
+  flushPendingCoachSpeech() {
+    if (this.isMicPriorityActive || !this.pendingCoachSpeechMessage) {
+      return;
+    }
+
+    const pendingMessage = this.pendingCoachSpeechMessage;
+    this.pendingCoachSpeechMessage = null;
+    this.speakCoachMessage(pendingMessage);
   }
 
   estimateSpeechDurationMs(text) {
@@ -326,8 +343,6 @@ class LiveCoach extends HTMLElement {
     } catch (error) {
       console.warn(error);
     }
-
-    console.log(this._instructions);
 
     this.functionCallTools = {
       get_player_state() {
@@ -594,9 +609,9 @@ class LiveCoach extends HTMLElement {
       chatElement.scrollTop = chatElement.scrollHeight;
 
       // Hides Game and FunctionCall messages from the front-end, but saves the history to keep for transcripting the actions gone within the playtest
-      // if(sender === "Game") {
-      //   messageElement.style.display = "none";
-      // }
+      if(sender === "Game") {
+        messageElement.style.display = "none";
+      }
 
       // Hide FunctionCall messages if toggle is off
       if(sender === "FunctionCallResults" && !this.functionCallsVisible) {
@@ -766,6 +781,7 @@ class LiveCoach extends HTMLElement {
     // Speech Recognition setup
     let recognition = null;
     let isListening = false;
+    let ttsPausedByMicrophone = false; // Track if TTS was paused due to microphone input
     const micGamepadButtonIndices = [7]; // Switch controller mapping: ZR 7 (ZL reserved for captions)
     const ttsGamepadButtonIndices = [16]; // Switch home button mapping: 17
     let keyboardMicHeld = false;
@@ -773,14 +789,44 @@ class LiveCoach extends HTMLElement {
     let gamepadTtsToggleHeld = false;
     let gamepadPollId = null;
 
+    const releaseMicPriority = () => {
+      this.isMicPriorityActive = false;
+
+      if (this.pendingCoachSpeechMessage) {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+        }
+        ttsPausedByMicrophone = false;
+        this.flushPendingCoachSpeech();
+        return;
+      }
+
+      if (ttsPausedByMicrophone && this.ttsEnabled && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+      ttsPausedByMicrophone = false;
+    };
+
     const startMicHold = () => {
       if (!recognition || isListening) {
         return;
       }
       try {
+        this.isMicPriorityActive = true;
+
+        // Start recognition first to capture audio immediately
         recognition.start();
         isListening = true;
         micIcon.style.display = 'inline';
+        
+        // Pause TTS after recognition has started so it doesn't interfere with audio capture
+        if (this.ttsEnabled && window.speechSynthesis && !window.speechSynthesis.paused) {
+          window.speechSynthesis.pause();
+          ttsPausedByMicrophone = true;
+        }
       } catch (err) {
         // Ignore repeated starts while recognition is already active.
       }
@@ -798,6 +844,9 @@ class LiveCoach extends HTMLElement {
       } catch (err) {
         // Ignore stop race conditions while recognition is ending.
       }
+
+      releaseMicPriority();
+
       isListening = false;
       micIcon.style.display = 'none';
     };
@@ -862,10 +911,12 @@ class LiveCoach extends HTMLElement {
         playerInput.value = '';
       };
       recognition.onerror = (event) => {
+        releaseMicPriority();
         isListening = false;
         micIcon.style.display = 'none';
       };
       recognition.onend = () => {
+        releaseMicPriority();
         isListening = false;
         micIcon.style.display = 'none';
       };
