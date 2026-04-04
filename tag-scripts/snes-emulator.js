@@ -14,6 +14,10 @@ class SnesEmulator extends HTMLElement {
       fullscreen: {
         buttonIndices: [17], // Switch capture button
         held: false
+      },
+      captions: {
+        buttonIndices: [6], // Switch ZL trigger
+        held: false
       }
     };
 
@@ -27,6 +31,8 @@ class SnesEmulator extends HTMLElement {
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
     this.SAVE_SLOTS = new Array(10); // 10 save slots by default, will preload 4-9
     this._captionTimers = new Map();
+    this.fullscreenCaptionsStorageKey = "LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED";
+    this.fullscreenCaptionsEnabled = localStorage.getItem(this.fullscreenCaptionsStorageKey) === "true";
   }
 
   // called each time component is added onto document
@@ -41,6 +47,7 @@ class SnesEmulator extends HTMLElement {
   // ----- First instance of SNES Emulator creation -----
   async init() {
     this.render();
+    this.broadcastFullscreenCaptionsState();
     if (!this.romUrl) {
       return;
     }
@@ -110,6 +117,49 @@ class SnesEmulator extends HTMLElement {
     this._captionTimers.delete(captionKey);
   }
 
+  clearFullscreenCaptions() {
+    const captionLayer = this.querySelector('#fullscreen-caption-layer');
+    if (!captionLayer) {
+      return;
+    }
+
+    captionLayer.querySelectorAll('[data-caption-key]').forEach((captionEl) => {
+      if (captionEl.dataset && captionEl.dataset.captionKey) {
+        this.clearCaptionTimers(captionEl.dataset.captionKey);
+      }
+      captionEl.remove();
+    });
+  }
+
+  broadcastFullscreenCaptionsState() {
+    window.dispatchEvent(new CustomEvent('live-coach-fullscreen-captions-changed', {
+      detail: { enabled: this.fullscreenCaptionsEnabled }
+    }));
+  }
+
+  getFullscreenCaptionsEnabled() {
+    return this.fullscreenCaptionsEnabled;
+  }
+
+  setFullscreenCaptionsEnabled(enabled) {
+    this.fullscreenCaptionsEnabled = !!enabled;
+    localStorage.setItem(
+      this.fullscreenCaptionsStorageKey,
+      this.fullscreenCaptionsEnabled ? 'true' : 'false'
+    );
+
+    if (!this.fullscreenCaptionsEnabled) {
+      this.clearFullscreenCaptions();
+    }
+
+    this.broadcastFullscreenCaptionsState();
+    return this.fullscreenCaptionsEnabled;
+  }
+
+  toggleFullscreenCaptions() {
+    return this.setFullscreenCaptionsEnabled(!this.fullscreenCaptionsEnabled);
+  }
+
   scheduleCaptionDismiss(captionEl, captionKey, lingerMs) {
     if (!captionEl || !captionEl.parentNode) {
       return;
@@ -134,7 +184,7 @@ class SnesEmulator extends HTMLElement {
   }
 
   showFullscreenCaption({ speaker, text, captionKey, lingerMs = 3000, holdUntilDismiss = false }) {
-    if (!this.isInFullscreenMode()) {
+    if (!this.fullscreenCaptionsEnabled || !this.isInFullscreenMode()) {
       return;
     }
 
@@ -303,7 +353,7 @@ class SnesEmulator extends HTMLElement {
   initGameControls() {
     // ----- External Gamepad Controller of SNES controller (Switch Pro Controller scheme) -----
     // Gamepad API https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
-    // ONLY for gamepad inputs appropriate for the game emulator, set of other buttons are NOT included in here (e.g., fullscreen and mic toggle)
+    // ONLY for gamepad inputs appropriate for the game emulator, set of other buttons are NOT included in here (e.g., fullscreen and captions toggle)
     this.gamepadInputs = {
       0: 0,   // A button
       1: 2,   // X button
@@ -406,8 +456,18 @@ class SnesEmulator extends HTMLElement {
       } else if (!fullscreenPressed) {
         fullscreenControl.held = false;
       }
+
+      const captionsControl = this.gamepadSystemInputs.captions;
+      const captionsPressed = this.isAnyGamepadButtonPressed(gamepads[0], captionsControl.buttonIndices);
+      if (captionsPressed && !captionsControl.held) {
+        this.toggleFullscreenCaptions();
+        captionsControl.held = true;
+      } else if (!captionsPressed) {
+        captionsControl.held = false;
+      }
     } else {
       this.gamepadSystemInputs.fullscreen.held = false;
+      this.gamepadSystemInputs.captions.held = false;
     }
     requestAnimationFrame(this.checkGamepadInput);
   }

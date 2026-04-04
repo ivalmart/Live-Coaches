@@ -49,6 +49,7 @@ class LiveCoach extends HTMLElement {
     this.ttsHasPrimed = false;
     this.coachCaptionKey = "coach-live-caption";
     this.activeCoachSpeechToken = 0;
+    this.fullscreenCaptionsEnabled = localStorage.getItem("LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED") !== "false";
 
     // Function call visibility toggle
     this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
@@ -230,6 +231,23 @@ class LiveCoach extends HTMLElement {
     }
     button.textContent = this.functionCallsVisible ? "FC Show: ON" : "FC Show: OFF";
     button.setAttribute("aria-pressed", this.functionCallsVisible ? "true" : "false");
+  }
+
+  updateCaptionsToggle(button) {
+    if (!button) {
+      return;
+    }
+    button.textContent = this.fullscreenCaptionsEnabled ? "Captions: ON" : "Captions: OFF";
+    button.setAttribute("aria-pressed", this.fullscreenCaptionsEnabled ? "true" : "false");
+  }
+
+  syncFullscreenCaptionsState() {
+    const snes = document.querySelector('snes-emulator');
+    if (snes && typeof snes.getFullscreenCaptionsEnabled === 'function') {
+      this.fullscreenCaptionsEnabled = !!snes.getFullscreenCaptionsEnabled();
+      return;
+    }
+    this.fullscreenCaptionsEnabled = localStorage.getItem("LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED") !== "false";
   }
 
   // called each time component is added onto document
@@ -616,6 +634,7 @@ class LiveCoach extends HTMLElement {
           <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
         </div>
         <button id="function-calls-toggle" type="button" class="control-btn" aria-pressed="true">Function Calls: ON</button>
+        <button id="captions-toggle" type="button" class="control-btn" aria-pressed="true">Captions: ON</button>
         <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
       </div>
     `;
@@ -623,6 +642,7 @@ class LiveCoach extends HTMLElement {
     const playerInput = this.querySelector("#user-input");
     const micIcon = this.querySelector("#mic-icon");
     const functionCallsToggleBtn = this.querySelector("#function-calls-toggle");
+    const captionsToggleBtn = this.querySelector("#captions-toggle");
     const ttsToggleBtn = this.querySelector("#tts-toggle");
 
     // ----- Function Calls Visibility Toggle Functionality -----
@@ -646,6 +666,38 @@ class LiveCoach extends HTMLElement {
     functionCallsToggleBtn?.addEventListener("click", () => {
       applyFunctionCallsToggle();
     });
+
+    // ----- Fullscreen Captions Toggle Functionality -----
+    this.syncFullscreenCaptionsState();
+    this.updateCaptionsToggle(captionsToggleBtn);
+
+    const applyCaptionsToggle = () => {
+      const snes = document.querySelector('snes-emulator');
+      if (snes && typeof snes.toggleFullscreenCaptions === 'function') {
+        this.fullscreenCaptionsEnabled = !!snes.toggleFullscreenCaptions();
+      } else {
+        this.fullscreenCaptionsEnabled = !this.fullscreenCaptionsEnabled;
+        localStorage.setItem("LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED", this.fullscreenCaptionsEnabled ? "true" : "false");
+      }
+      this.updateCaptionsToggle(captionsToggleBtn);
+    };
+
+    captionsToggleBtn?.addEventListener("click", () => {
+      applyCaptionsToggle();
+    });
+
+    const handleFullscreenCaptionsChanged = (event) => {
+      if (event && event.detail && typeof event.detail.enabled === 'boolean') {
+        this.fullscreenCaptionsEnabled = event.detail.enabled;
+      } else {
+        this.syncFullscreenCaptionsState();
+      }
+      this.updateCaptionsToggle(captionsToggleBtn);
+    };
+    window.addEventListener('live-coach-fullscreen-captions-changed', handleFullscreenCaptionsChanged);
+    this._cleanupCaptionsSync = () => {
+      window.removeEventListener('live-coach-fullscreen-captions-changed', handleFullscreenCaptionsChanged);
+    };
 
     // ----- Text-to-Speech Toggle Functionality -----
     this.toggleTTS(ttsToggleBtn);
@@ -701,7 +753,7 @@ class LiveCoach extends HTMLElement {
     // Speech Recognition setup
     let recognition = null;
     let isListening = false;
-    const micGamepadButtonIndices = [6, 7]; // Switch controller mapping: ZL 6 / ZR 7
+    const micGamepadButtonIndices = [7]; // Switch controller mapping: ZR 7 (ZL reserved for captions)
     const ttsGamepadButtonIndices = [16]; // Switch home button mapping: 17
     let keyboardMicHeld = false;
     let gamepadMicHeld = false;
@@ -846,6 +898,10 @@ class LiveCoach extends HTMLElement {
   disconnectedCallback() {
     if (this._cleanupMicPolling) {
       this._cleanupMicPolling();
+    }
+
+    if (this._cleanupCaptionsSync) {
+      this._cleanupCaptionsSync();
     }
 
     if (this._cleanupTtsVoices) {
