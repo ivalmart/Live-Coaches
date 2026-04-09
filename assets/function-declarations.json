@@ -113,8 +113,8 @@
     "included_ablation": ["coachness"]
   },
   {
-    "name": "direction_to_goal",
-    "description": "Takes in a set of x,y coordinates from the goal node and returns the direction vector from the player's current position to the given goal parameter. Use this to give the player a sense of which direction they should be moving in to get closer to their goal. Note that the coordinate system has x positive going to the right and y positive going down. IMPORTANT: do not give spatial directions like 'left' or 'right' or 'up' or 'down' in your response without calling this tool first to do the correct spatial reasoning.",
+    "name": "direction_to_point",
+    "description": "Takes in a set of x,y coordinates from the given node and returns the direction vector from the player's current position to the given position of the node. Use this to give the player a sense of which direction they should be moving in to get closer to the direction of the given node. Note that the coordinate system has x positive going to the right and y positive going down. IMPORTANT: do not give spatial directions like 'left' or 'right' or 'up' or 'down' in your response without calling this tool first to do the correct spatial reasoning.",
     "parameters": {
       "type": "object",
       "properties": {
