@@ -409,7 +409,7 @@ class LiveCoach extends HTMLElement {
         let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
         return await response.json();
       },
-      direction_to_goal({goalCoords}) {
+      direction_to_point({goalCoords}) {
         // x axis <- towards 0, y axis ^ towards 0
         const playerObj = document.querySelector('sm-map').player;
         const playerCoords = { x: playerObj.x, y: playerObj.y };
