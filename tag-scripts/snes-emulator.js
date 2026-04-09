@@ -41,6 +41,8 @@ class SnesEmulator extends HTMLElement {
       text: "System is thinking..."
     };
     this._fullscreenSyncHandler = null;
+    this._overlayClockIntervalId = null;
+    this._overlayClockResizeHandler = null;
   }
 
   // called each time component is added onto document
@@ -53,15 +55,30 @@ class SnesEmulator extends HTMLElement {
     if (!this._fullscreenSyncHandler) {
       this._fullscreenSyncHandler = () => {
         this.applySystemActivityIndicator();
+        this.positionCanvasBoundOverlays();
       };
       document.addEventListener('fullscreenchange', this._fullscreenSyncHandler);
       document.addEventListener('webkitfullscreenchange', this._fullscreenSyncHandler);
+    }
+
+    if (!this._overlayClockResizeHandler) {
+      this._overlayClockResizeHandler = () => {
+        this.positionCanvasBoundOverlays();
+      };
+      window.addEventListener('resize', this._overlayClockResizeHandler);
     }
 
     this.init();
   }
 
   disconnectedCallback() {
+    this.stopOverlayClock();
+
+    if (this._overlayClockResizeHandler) {
+      window.removeEventListener('resize', this._overlayClockResizeHandler);
+      this._overlayClockResizeHandler = null;
+    }
+
     if (this._fullscreenSyncHandler) {
       document.removeEventListener('fullscreenchange', this._fullscreenSyncHandler);
       document.removeEventListener('webkitfullscreenchange', this._fullscreenSyncHandler);
@@ -69,9 +86,102 @@ class SnesEmulator extends HTMLElement {
     }
   }
 
+  formatOverlayClockTime(date = new Date()) {
+    return date.toLocaleTimeString([], {
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
+  updateOverlayClock() {
+    const clockEl = this.querySelector('#overlay-clock');
+    if (!clockEl) {
+      return;
+    }
+    this.positionCanvasBoundOverlays();
+    clockEl.textContent = this.formatOverlayClockTime();
+  }
+
+  positionCanvasBoundOverlays() {
+    this.positionOverlayClock();
+    this.positionRecordingModeOutline();
+  }
+
+  positionOverlayClock() {
+    const clockEl = this.querySelector('#overlay-clock');
+    const emuStyle = this.querySelector('.emu_style');
+    const canvas = this.querySelector('canvas');
+    if (!clockEl || !emuStyle || !canvas) {
+      return;
+    }
+
+    const hostRect = emuStyle.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    if (!hostRect.width || !hostRect.height || !canvasRect.width || !canvasRect.height) {
+      return;
+    }
+
+    // Anchor inside the visible canvas area so the clock stays aligned during letterboxing/resizing.
+    const horizontalPadding = Math.max(8, Math.round(canvasRect.width * 0.02));
+    const verticalPadding = Math.max(8, Math.round(canvasRect.height * 0.02));
+    const leftPx = Math.round(canvasRect.left - hostRect.left + horizontalPadding);
+    const bottomPx = Math.round(hostRect.bottom - canvasRect.bottom + verticalPadding);
+
+    clockEl.style.left = `${leftPx}px`;
+    clockEl.style.top = 'auto';
+    clockEl.style.right = 'auto';
+    clockEl.style.bottom = `${bottomPx}px`;
+  }
+
+  positionRecordingModeOutline() {
+    const overlay = this.querySelector('#recording-mode-outline');
+    const emuStyle = this.querySelector('.emu_style');
+    const canvas = this.querySelector('canvas');
+    if (!overlay || !emuStyle || !canvas) {
+      return;
+    }
+
+    const hostRect = emuStyle.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    if (!hostRect.width || !hostRect.height || !canvasRect.width || !canvasRect.height) {
+      return;
+    }
+
+    const leftPx = Math.round(canvasRect.left - hostRect.left);
+    const topPx = Math.round(canvasRect.top - hostRect.top);
+    const widthPx = Math.round(canvasRect.width);
+    const heightPx = Math.round(canvasRect.height);
+
+    overlay.style.left = `${leftPx}px`;
+    overlay.style.top = `${topPx}px`;
+    overlay.style.width = `${widthPx}px`;
+    overlay.style.height = `${heightPx}px`;
+    overlay.style.right = 'auto';
+    overlay.style.bottom = 'auto';
+  }
+
+  startOverlayClock() {
+    this.updateOverlayClock();
+    this.stopOverlayClock();
+    this._overlayClockIntervalId = window.setInterval(() => {
+      this.updateOverlayClock();
+    }, 1000);
+  }
+
+  stopOverlayClock() {
+    if (this._overlayClockIntervalId === null) {
+      return;
+    }
+    clearInterval(this._overlayClockIntervalId);
+    this._overlayClockIntervalId = null;
+  }
+
   // ----- First instance of SNES Emulator creation -----
   async init() {
     this.render();
+    this.startOverlayClock();
     this.broadcastFullscreenCaptionsState();
     if (!this.romUrl) {
       return;
@@ -90,6 +200,7 @@ class SnesEmulator extends HTMLElement {
     this.initExportImport();
     await this.initSaveStates();
     this.playerState = this.retrievePlayerState();
+    this.positionCanvasBoundOverlays();
   }
 
   async loadBinary(url) {
@@ -293,6 +404,7 @@ class SnesEmulator extends HTMLElement {
     if (!overlay) {
       return;
     }
+    this.positionRecordingModeOutline();
     overlay.classList.toggle('active', this.recordingModeActive);
     overlay.setAttribute('aria-hidden', this.recordingModeActive ? 'false' : 'true');
   }
@@ -711,6 +823,7 @@ class SnesEmulator extends HTMLElement {
           <button id="import">Import State</button>
         </div>
         <div id="emulator"></div>
+        <div id="overlay-clock" aria-label="Current time"></div>
         <div id="fullscreen-caption-layer" aria-live="polite" aria-atomic="false"></div>
         <div id="fullscreen-system-indicator" aria-live="polite" aria-atomic="true" aria-hidden="true">
           <span class="fullscreen-system-indicator-dot" aria-hidden="true"></span>

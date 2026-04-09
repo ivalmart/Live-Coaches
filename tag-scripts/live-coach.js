@@ -87,6 +87,23 @@ class LiveCoach extends HTMLElement {
     };
   }
 
+  getTranscriptTimestamp() {
+    return new Date().toLocaleTimeString([], {
+      hour12: true,
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  }
+
+  buildTranscriptEntry(from, text) {
+    return {
+      from,
+      text,
+      timestamp: this.getTranscriptTimestamp(),
+    };
+  }
+
   summarizeFunctionResult(result) {
     if (!result || typeof result !== "object") {
       return result;
@@ -631,7 +648,7 @@ class LiveCoach extends HTMLElement {
 
       try {
         this.beginSystemWork("System is thinking...");
-        // return;
+        return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
@@ -656,10 +673,12 @@ class LiveCoach extends HTMLElement {
                 }
 
                 this.finalizeFunctionCallMessage(functionCallMessage, result, callError);
-                this.history.push({
-                  from: "FunctionCallResults",
-                  text: `name=${call.name}; args=${JSON.stringify(call.args)}; result=${JSON.stringify(this.summarizeFunctionResult(result))}`
-                });
+                this.history.push(
+                  this.buildTranscriptEntry(
+                    "FunctionCallResults",
+                    `name=${call.name}; args=${JSON.stringify(call.args)}; result=${JSON.stringify(this.summarizeFunctionResult(result))}`
+                  )
+                );
 
                 const payload = this.buildFunctionResponsePayload(result);
                 const functionResponsePart = {
@@ -747,7 +766,7 @@ class LiveCoach extends HTMLElement {
         messageElement.style.display = "none";
       }
 
-      this.history.push({ from: sender, text: message });
+      this.history.push(this.buildTranscriptEntry(sender, message));
 
       if (originalSender === 'Player' || originalSender === 'Coach') {
         this.showFullscreenCaption(originalSender, message);
@@ -794,9 +813,9 @@ class LiveCoach extends HTMLElement {
           />
           <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
         </div>
-        <button id="extra-controls-toggle" type="button" class="control-btn" aria-pressed="true">Admin: ON</button>
         <button id="captions-toggle" type="button" class="control-btn" aria-pressed="true">Captions: ON</button>
         <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
+        <button id="extra-controls-toggle" type="button" class="control-btn" aria-pressed="true">Admin: ON</button>
       </div>
       <div class="chat-secondary-row">
         <button id="download-transcript" type="button" class="control-btn">Download Transcript</button>

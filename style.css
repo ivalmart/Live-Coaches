@@ -115,6 +115,30 @@ snes-emulator canvas {
   box-sizing: border-box;
 }
 
+#overlay-clock {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.6ch;
+  padding: 0.35em 0.72em;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  background: rgba(6, 12, 22, 0.7);
+  color: #f2f7ff;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: clamp(12px, 1vw, 21px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  user-select: none;
+  z-index: 23;
+}
+
 #fullscreen-system-indicator {
   position: absolute;
   top: 3.5vh;
@@ -144,7 +168,10 @@ snes-emulator canvas {
 
 #recording-mode-outline {
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
   border: 10px solid rgba(255, 40, 40, 0.94);
   border-radius: 6px;
   box-sizing: border-box;
