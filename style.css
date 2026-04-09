@@ -249,7 +249,15 @@ snes-emulator canvas {
 .chat-input-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.chat-secondary-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   width: 100%;
   margin-bottom: 6px;
 }
@@ -261,8 +269,8 @@ snes-emulator canvas {
 
 .tts-btn {
   background: #135f8b;
-  font-size: 13px;
-  padding: 0.35em 0.75em;
+  font-size: 12px;
+  padding: 0.28em 0.62em;
   margin: 0;
   margin-bottom: 0;
   flex-shrink: 0;
@@ -275,11 +283,11 @@ snes-emulator canvas {
 
 .control-btn {
   background: #135f8b;
-  font-size: 13px;
-  padding: 0.35em 0.75em;
+  font-size: 12px;
+  padding: 0.28em 0.62em;
   margin: 0;
   margin-bottom: 0;
-  margin-right: 4px;
+  margin-right: 2px;
   flex-shrink: 0;
   white-space: nowrap;
 }

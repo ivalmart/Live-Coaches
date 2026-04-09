@@ -57,6 +57,7 @@ class LiveCoach extends HTMLElement {
 
     // Function call visibility toggle
     this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
+    this.extraControlsVisible = localStorage.getItem("LIVE_COACH_EXTRA_CONTROLS_VISIBLE") !== "false";
   }
 
   buildFunctionResponsePayload(result) {
@@ -258,6 +259,21 @@ class LiveCoach extends HTMLElement {
     }
     button.textContent = this.fullscreenCaptionsEnabled ? "Captions: ON" : "Captions: OFF";
     button.setAttribute("aria-pressed", this.fullscreenCaptionsEnabled ? "true" : "false");
+  }
+
+  updateExtraControlsToggle(button, controlledButtons = []) {
+    controlledButtons.forEach((controlledButton) => {
+      if (controlledButton) {
+        controlledButton.style.display = this.extraControlsVisible ? "" : "none";
+      }
+    });
+
+    if (!button) {
+      return;
+    }
+
+    button.textContent = this.extraControlsVisible ? "Admin: ON" : "Admin: OFF";
+    button.setAttribute("aria-pressed", this.extraControlsVisible ? "true" : "false");
   }
 
   syncFullscreenCaptionsState() {
@@ -661,17 +677,35 @@ class LiveCoach extends HTMLElement {
           />
           <span id="mic-icon" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:16px; display:none; pointer-events:none;">🎤</span>
         </div>
-        <button id="function-calls-toggle" type="button" class="control-btn" aria-pressed="true">Function Calls: ON</button>
+        <button id="extra-controls-toggle" type="button" class="control-btn" aria-pressed="true">Admin: ON</button>
         <button id="captions-toggle" type="button" class="control-btn" aria-pressed="true">Captions: ON</button>
         <button id="tts-toggle" type="button" class="tts-btn" aria-pressed="false">TTS: OFF</button>
+      </div>
+      <div class="chat-secondary-row">
+        <button id="download-transcript" type="button" class="control-btn">Download Transcript</button>
+        <button id="function-calls-toggle" type="button" class="control-btn" aria-pressed="true">Function Calls: ON</button>
       </div>
     `;
 
     const playerInput = this.querySelector("#user-input");
     const micIcon = this.querySelector("#mic-icon");
+    const extraControlsToggleBtn = this.querySelector("#extra-controls-toggle");
+    const downloadTranscriptBtn = this.querySelector("#download-transcript");
     const functionCallsToggleBtn = this.querySelector("#function-calls-toggle");
     const captionsToggleBtn = this.querySelector("#captions-toggle");
     const ttsToggleBtn = this.querySelector("#tts-toggle");
+
+    this.updateExtraControlsToggle(extraControlsToggleBtn, [downloadTranscriptBtn, functionCallsToggleBtn]);
+
+    extraControlsToggleBtn?.addEventListener("click", () => {
+      this.extraControlsVisible = !this.extraControlsVisible;
+      localStorage.setItem("LIVE_COACH_EXTRA_CONTROLS_VISIBLE", this.extraControlsVisible ? "true" : "false");
+      this.updateExtraControlsToggle(extraControlsToggleBtn, [downloadTranscriptBtn, functionCallsToggleBtn]);
+    });
+
+    downloadTranscriptBtn?.addEventListener("click", () => {
+      this.downloadChatTranscript();
+    });
 
     // ----- Function Calls Visibility Toggle Functionality -----
     this.updateFunctionCallsToggle(functionCallsToggleBtn);
