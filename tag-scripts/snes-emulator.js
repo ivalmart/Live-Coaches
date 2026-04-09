@@ -35,6 +35,12 @@ class SnesEmulator extends HTMLElement {
     this._captionTimers = new Map();
     this.fullscreenCaptionsStorageKey = "LIVE_COACH_FULLSCREEN_CAPTIONS_ENABLED";
     this.fullscreenCaptionsEnabled = localStorage.getItem(this.fullscreenCaptionsStorageKey) === "true";
+    this.recordingModeActive = false;
+    this.systemActivityIndicatorState = {
+      visible: false,
+      text: "System is thinking..."
+    };
+    this._fullscreenSyncHandler = null;
   }
 
   // called each time component is added onto document
@@ -43,7 +49,24 @@ class SnesEmulator extends HTMLElement {
     this.romName = this.getAttribute('rom-name');
 
     this.stateUrl = this.getAttribute('state-url');
+
+    if (!this._fullscreenSyncHandler) {
+      this._fullscreenSyncHandler = () => {
+        this.applySystemActivityIndicator();
+      };
+      document.addEventListener('fullscreenchange', this._fullscreenSyncHandler);
+      document.addEventListener('webkitfullscreenchange', this._fullscreenSyncHandler);
+    }
+
     this.init();
+  }
+
+  disconnectedCallback() {
+    if (this._fullscreenSyncHandler) {
+      document.removeEventListener('fullscreenchange', this._fullscreenSyncHandler);
+      document.removeEventListener('webkitfullscreenchange', this._fullscreenSyncHandler);
+      this._fullscreenSyncHandler = null;
+    }
   }
 
   // ----- First instance of SNES Emulator creation -----
@@ -240,6 +263,38 @@ class SnesEmulator extends HTMLElement {
     }
 
     this.scheduleCaptionDismiss(caption, captionKey, lingerMs);
+  }
+
+  setSystemActivityIndicator({ visible, text = "System is thinking..." } = {}) {
+    this.systemActivityIndicatorState.visible = !!visible;
+    this.systemActivityIndicatorState.text = text || "System is thinking...";
+    this.applySystemActivityIndicator();
+  }
+
+  applySystemActivityIndicator() {
+    const indicator = this.querySelector('#fullscreen-system-indicator');
+    if (!indicator) {
+      return;
+    }
+
+    const shouldShow = !!this.systemActivityIndicatorState.visible && this.isInFullscreenMode();
+    const textNode = indicator.querySelector('.fullscreen-system-indicator-text');
+    if (textNode && this.systemActivityIndicatorState.text) {
+      textNode.textContent = this.systemActivityIndicatorState.text;
+    }
+
+    indicator.classList.toggle('visible', shouldShow);
+    indicator.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+  }
+
+  setRecordingModeActive(isActive) {
+    this.recordingModeActive = !!isActive;
+    const overlay = this.querySelector('#recording-mode-outline');
+    if (!overlay) {
+      return;
+    }
+    overlay.classList.toggle('active', this.recordingModeActive);
+    overlay.setAttribute('aria-hidden', this.recordingModeActive ? 'false' : 'true');
   }
 
   captureCoachScreenshot({ detailLevel = "normal" } = {}) {
@@ -657,6 +712,11 @@ class SnesEmulator extends HTMLElement {
         </div>
         <div id="emulator"></div>
         <div id="fullscreen-caption-layer" aria-live="polite" aria-atomic="false"></div>
+        <div id="fullscreen-system-indicator" aria-live="polite" aria-atomic="true" aria-hidden="true">
+          <span class="fullscreen-system-indicator-dot" aria-hidden="true"></span>
+          <span class="fullscreen-system-indicator-text">System is thinking...</span>
+        </div>
+        <div id="recording-mode-outline" aria-hidden="true"></div>
       </div>
     `;
   }

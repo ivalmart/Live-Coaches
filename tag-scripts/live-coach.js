@@ -57,6 +57,10 @@ class LiveCoach extends HTMLElement {
 
     // Function call visibility toggle
     this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
+
+    // Global activity indicator state (chat + fullscreen)
+    this.pendingWorkCount = 0;
+    this.systemThinkingText = "System is thinking...";
   }
 
   buildFunctionResponsePayload(result) {
@@ -106,6 +110,118 @@ class LiveCoach extends HTMLElement {
     }
 
     return result;
+  }
+
+  beginSystemWork(statusText = "System is thinking...") {
+    this.pendingWorkCount += 1;
+    this.systemThinkingText = statusText;
+    this.updateSystemThinkingIndicator();
+  }
+
+  updateSystemWorkStatus(statusText) {
+    if (!statusText) {
+      return;
+    }
+    this.systemThinkingText = statusText;
+    if (this.pendingWorkCount > 0) {
+      this.updateSystemThinkingIndicator();
+    }
+  }
+
+  endSystemWork() {
+    this.pendingWorkCount = Math.max(0, this.pendingWorkCount - 1);
+    if (this.pendingWorkCount === 0) {
+      this.systemThinkingText = "System is thinking...";
+    }
+    this.updateSystemThinkingIndicator();
+  }
+
+  updateSystemThinkingIndicator() {
+    const isActive = this.pendingWorkCount > 0;
+    const indicator = this.querySelector("#system-thinking-indicator");
+    if (indicator) {
+      const textNode = indicator.querySelector(".thinking-text");
+      if (textNode) {
+        textNode.textContent = this.systemThinkingText;
+      }
+      indicator.style.display = isActive ? "flex" : "none";
+      indicator.setAttribute("aria-hidden", isActive ? "false" : "true");
+    }
+
+    const snes = document.querySelector('snes-emulator');
+    if (snes && typeof snes.setSystemActivityIndicator === 'function') {
+      snes.setSystemActivityIndicator({
+        visible: isActive,
+        text: this.systemThinkingText,
+      });
+    }
+  }
+
+  setRecordingModeFeedback(isActive) {
+    const snes = document.querySelector('snes-emulator');
+    if (snes && typeof snes.setRecordingModeActive === 'function') {
+      snes.setRecordingModeActive(!!isActive);
+    }
+  }
+
+  createFunctionCallMessage(call) {
+    const messageDisplay = this.querySelector("#message_display");
+    if (!messageDisplay) {
+      return null;
+    }
+
+    const messageElement = document.createElement("div");
+    messageElement.className = "chat-message function-call-message";
+
+    const details = document.createElement("details");
+    details.className = "function-call-details function-call-pending";
+    details.open = true;
+
+    const summary = document.createElement("summary");
+    summary.className = "function-call-summary function-call-summary-pending";
+    summary.textContent = `${call.name} (running...)`;
+
+    const content = document.createElement("pre");
+    content.className = "function-call-content";
+    content.textContent = `Status: Running...\nArguments: ${JSON.stringify(call.args)}`;
+
+    details.appendChild(summary);
+    details.appendChild(content);
+    messageElement.appendChild(details);
+    messageDisplay.appendChild(messageElement);
+    messageDisplay.scrollTop = messageDisplay.scrollHeight;
+
+    if (!this.functionCallsVisible) {
+      messageElement.style.display = "none";
+    }
+
+    return { messageElement, details, summary, content, callName: call.name, callArgs: call.args };
+  }
+
+  finalizeFunctionCallMessage(messageRefs, result, error) {
+    if (!messageRefs) {
+      return;
+    }
+
+    const { details, summary, content, callName, callArgs } = messageRefs;
+    const argsText = JSON.stringify(callArgs);
+
+    details.classList.remove("function-call-pending", "function-call-complete", "function-call-error");
+    summary.classList.remove("function-call-summary-pending", "function-call-summary-complete", "function-call-summary-error");
+
+    if (error) {
+      details.classList.add("function-call-error");
+      summary.classList.add("function-call-summary-error");
+      summary.textContent = `${callName} (error)`;
+      content.textContent = `Arguments: ${argsText}\n\nError: ${error}`;
+      return;
+    }
+
+    details.classList.add("function-call-complete");
+    summary.classList.add("function-call-summary-complete");
+    summary.textContent = `${callName} (done)`;
+    const summarizedResult = this.summarizeFunctionResult(result);
+    content.textContent = `Arguments: ${argsText}\n\nResults: ${JSON.stringify(summarizedResult)}`;
   }
 
   getCoachSpeechText(rawMessage) {
@@ -498,6 +614,7 @@ class LiveCoach extends HTMLElement {
       this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
 
       try {
+        this.beginSystemWork("System is thinking...");
         // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
@@ -510,30 +627,23 @@ class LiveCoach extends HTMLElement {
             const functionResponseParts = [];
             for (let call of response.functionCalls) {
               if (this.functionCallTools[call.name]) {
+                const functionCallMessage = this.createFunctionCallMessage(call);
                 let result = undefined;
+                let callError = null;
                 try {
+                  this.updateSystemWorkStatus(`Running ${call.name}...`);
                   result = await this.functionCallTools[call.name](call.args);
                 } catch (error) {
                   console.warn("Error executing function call:", call.name, error);
-                  result = "Error: " + error.message; // Return error message if function fails
+                  callError = error && error.message ? error.message : String(error);
+                  result = "Error: " + callError; // Return error message if function fails
                 }
 
-                // Creating collapsible element only for function call results (qol)
-                let collapsibleResults = document.createElement("details");
-                let fc_Title = document.createElement("summary");
-                let contents = document.createElement("pre");
-                collapsibleResults.className = "function-call-details";
-                fc_Title.className = "function-call-summary";
-                contents.className = "function-call-content";
-                fc_Title.textContent = call.name;
-                const summarizedResult = this.summarizeFunctionResult(result);
-                contents.textContent = "Arguments: " + JSON.stringify(call.args) + "\n\nResults: " + JSON.stringify(summarizedResult);
-                collapsibleResults.appendChild(fc_Title);
-                collapsibleResults.appendChild(contents);
-
-                let messageContainer = document.createElement("div");
-                messageContainer.appendChild(collapsibleResults);
-                this.displayMessage("FunctionCallResults", messageContainer.innerHTML, this.querySelector("#message_display"));
+                this.finalizeFunctionCallMessage(functionCallMessage, result, callError);
+                this.history.push({
+                  from: "FunctionCallResults",
+                  text: `name=${call.name}; args=${JSON.stringify(call.args)}; result=${JSON.stringify(this.summarizeFunctionResult(result))}`
+                });
 
                 const payload = this.buildFunctionResponsePayload(result);
                 const functionResponsePart = {
@@ -552,6 +662,7 @@ class LiveCoach extends HTMLElement {
             }
 
             if (functionResponseParts.length) {
+              this.updateSystemWorkStatus("System is thinking...");
               response = await this._chat.sendMessage({
                 message: functionResponseParts,
               });
@@ -564,6 +675,8 @@ class LiveCoach extends HTMLElement {
       } catch (error) {
         console.warn("Error sending message:", error);
         this.displayMessage("ErrorSystem", "Sorry, there was an error processing your message.", this.querySelector("#message_display"));
+      } finally {
+        this.endSystemWork();
       }
     }
   }
@@ -651,6 +764,10 @@ class LiveCoach extends HTMLElement {
     this.innerHTML = `
       <link rel="stylesheet" href="../style.css"/>
       <div id="message_display"></div>
+      <div id="system-thinking-indicator" class="system-thinking-indicator" role="status" aria-live="polite" aria-hidden="true" style="display:none;">
+        <span class="thinking-dot" aria-hidden="true"></span>
+        <span class="thinking-text">System is thinking...</span>
+      </div>
       <div class="chat-input-row">
         <div class="chat-input-wrap" style="position:relative; display:inline-block; width:100%;">
           <input
@@ -820,6 +937,7 @@ class LiveCoach extends HTMLElement {
         // Start recognition first to capture audio immediately
         recognition.start();
         isListening = true;
+        this.setRecordingModeFeedback(true);
         micIcon.style.display = 'inline';
         
         // Pause TTS after recognition has started so it doesn't interfere with audio capture
@@ -829,6 +947,7 @@ class LiveCoach extends HTMLElement {
         }
       } catch (err) {
         // Ignore repeated starts while recognition is already active.
+        this.setRecordingModeFeedback(false);
       }
     };
 
@@ -848,6 +967,7 @@ class LiveCoach extends HTMLElement {
       releaseMicPriority();
 
       isListening = false;
+      this.setRecordingModeFeedback(false);
       micIcon.style.display = 'none';
     };
 
@@ -913,11 +1033,13 @@ class LiveCoach extends HTMLElement {
       recognition.onerror = (event) => {
         releaseMicPriority();
         isListening = false;
+        this.setRecordingModeFeedback(false);
         micIcon.style.display = 'none';
       };
       recognition.onend = () => {
         releaseMicPriority();
         isListening = false;
+        this.setRecordingModeFeedback(false);
         micIcon.style.display = 'none';
       };
     }
@@ -960,6 +1082,8 @@ class LiveCoach extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.setRecordingModeFeedback(false);
+
     if (this._cleanupMicPolling) {
       this._cleanupMicPolling();
     }
