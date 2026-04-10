@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "https://esm.run/@google/genai";
 import { marked } from "https://esm.run/marked";
 import FUNCTION_DECLARATIONS from "../assets/function-declarations.json" with { "type": "json" }
+import ALL_ROUTE_NODES from "../SNES9x-framework/all_nodes.json" with { "type": "json" }
 
 // API Key Retrieval
 async function getApiKey() {
@@ -62,6 +63,112 @@ class LiveCoach extends HTMLElement {
     // Global activity indicator state (chat + fullscreen)
     this.pendingWorkCount = 0;
     this.systemThinkingText = "System is thinking...";
+
+    // Planner node validation helpers
+    this.routeNodeNames = Object.keys(ALL_ROUTE_NODES);
+    this.routeNodeSet = new Set(this.routeNodeNames);
+    this.routeNodeLowerMap = new Map(
+      this.routeNodeNames.map((name) => [name.toLowerCase(), name])
+    );
+    this.routeNodeCompactMap = new Map(
+      this.routeNodeNames.map((name) => [
+        name.toLowerCase().replace(/[^a-z0-9]/g, ""),
+        name,
+      ])
+    );
+  }
+
+  resolveDesignSpaceNodeName(rawNodeName) {
+    if (typeof rawNodeName !== "string") {
+      return null;
+    }
+
+    const trimmed = rawNodeName.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    if (this.routeNodeSet.has(trimmed)) {
+      return trimmed;
+    }
+
+    const underscored = trimmed.replace(/\s+/g, "_");
+    if (this.routeNodeSet.has(underscored)) {
+      return underscored;
+    }
+
+    const lowerTrimmed = trimmed.toLowerCase();
+    if (this.routeNodeLowerMap.has(lowerTrimmed)) {
+      return this.routeNodeLowerMap.get(lowerTrimmed);
+    }
+
+    const lowerUnderscored = underscored.toLowerCase();
+    if (this.routeNodeLowerMap.has(lowerUnderscored)) {
+      return this.routeNodeLowerMap.get(lowerUnderscored);
+    }
+
+    const compact = lowerTrimmed.replace(/[^a-z0-9]/g, "");
+    if (this.routeNodeCompactMap.has(compact)) {
+      return this.routeNodeCompactMap.get(compact);
+    }
+
+    return null;
+  }
+
+  suggestDesignSpaceNodes(rawNodeName, limit = 5) {
+    if (typeof rawNodeName !== "string") {
+      return [];
+    }
+
+    const normalized = rawNodeName.trim().toLowerCase();
+    if (!normalized) {
+      return [];
+    }
+
+    const normalizedWithUnderscores = normalized.replace(/\s+/g, "_");
+    const compact = normalized.replace(/[^a-z0-9]/g, "");
+
+    const scored = [];
+    for (const nodeName of this.routeNodeNames) {
+      const candidate = nodeName.toLowerCase();
+      const candidateCompact = candidate.replace(/[^a-z0-9]/g, "");
+      let score = 0;
+
+      if (candidate.startsWith(normalizedWithUnderscores)) {
+        score += 5;
+      }
+      if (candidate.includes(normalizedWithUnderscores)) {
+        score += 3;
+      }
+      if (compact && candidateCompact.includes(compact)) {
+        score += 2;
+      }
+
+      if (score > 0) {
+        scored.push({ nodeName, score });
+      }
+    }
+
+    return scored
+      .sort((a, b) => b.score - a.score || a.nodeName.localeCompare(b.nodeName))
+      .slice(0, limit)
+      .map((entry) => entry.nodeName);
+  }
+
+  buildNodeValidationError(rawNodeName, fieldName) {
+    const safeRawNodeName = typeof rawNodeName === "string" ? rawNodeName : String(rawNodeName);
+    const suggestions = this.suggestDesignSpaceNodes(safeRawNodeName);
+    const suggestionText = suggestions.length
+      ? ` Did you mean: ${suggestions.join(", ")}?`
+      : "";
+
+    return {
+      success: false,
+      message: `Invalid ${fieldName} '${safeRawNodeName}'. This node does not exist in the route planner design space.${suggestionText}`,
+      invalidNode: safeRawNodeName,
+      suggestions,
+      knownNodeCount: this.routeNodeNames.length,
+    };
   }
 
   buildFunctionResponsePayload(result) {
@@ -493,6 +600,7 @@ class LiveCoach extends HTMLElement {
       console.warn(error);
     }
 
+    const liveCoach = this;
     this.functionCallTools = {
       get_player_state() {
         const state = document.querySelector('snes-emulator').retrievePlayerState();
@@ -537,8 +645,20 @@ class LiveCoach extends HTMLElement {
         return document.querySelector('snes-emulator').get_set_bits_from_packed_value({packed_value});
       },
       async get_route_to_goal({nodeName, itemList, goalNode}) {
-        const requestBody = { nodeName, itemList };
-        if (goalNode) requestBody.goalNode = goalNode;
+        const resolvedStartNode = liveCoach.resolveDesignSpaceNodeName(nodeName);
+        if (!resolvedStartNode) {
+          return liveCoach.buildNodeValidationError(nodeName, "nodeName");
+        }
+
+        const requestBody = { nodeName: resolvedStartNode, itemList };
+        if (goalNode) {
+          const resolvedGoalNode = liveCoach.resolveDesignSpaceNodeName(goalNode);
+          if (!resolvedGoalNode) {
+            return liveCoach.buildNodeValidationError(goalNode, "goalNode");
+          }
+          requestBody.goalNode = resolvedGoalNode;
+        }
+
         let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/full_route", {
           method: "POST",
           headers: {
@@ -555,7 +675,12 @@ class LiveCoach extends HTMLElement {
         return data;
       },
       async get_node_info({nodeName}) {
-        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + nodeName);
+        const resolvedNodeName = liveCoach.resolveDesignSpaceNodeName(nodeName);
+        if (!resolvedNodeName) {
+          return liveCoach.buildNodeValidationError(nodeName, "nodeName");
+        }
+
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/node/" + resolvedNodeName);
         return await response.json();
       },
       direction_to_point({goalCoords}) {
@@ -648,7 +773,7 @@ class LiveCoach extends HTMLElement {
 
       try {
         this.beginSystemWork("System is thinking...");
-        return;
+        // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
         });
