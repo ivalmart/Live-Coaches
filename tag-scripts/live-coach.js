@@ -870,7 +870,7 @@ class LiveCoach extends HTMLElement {
           return liveCoach.buildNodeValidationError(nodeName, "nodeName");
         }
 
-        const requestBody = { nodeName: resolvedStartNode, itemList };
+        const requestBody = { nodeName: resolvedStartNode, itemList: [] }; // HACK: using empty item list until we agree on the canonical ordering of items
         if (goalNode) {
           const resolvedGoalNode = liveCoach.resolveDesignSpaceNodeName(goalNode);
           if (!resolvedGoalNode) {
