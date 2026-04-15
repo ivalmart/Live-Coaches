@@ -3,6 +3,26 @@ import { marked } from "https://esm.run/marked";
 import FUNCTION_DECLARATIONS from "../assets/function-declarations.json" with { "type": "json" }
 import ALL_ROUTE_NODES from "../SNES9x-framework/all_nodes.json" with { "type": "json" }
 
+const CHAT_MODEL = "gemini-3-flash-preview";
+const SESSION_COMPACTION_MAX_MESSAGES = 250;
+const SESSION_COMPACTION_SOURCE_FRACTION = 0.5;
+const SESSION_COMPACTION_STATUS_TEXT = "Summarizing session history...";
+const SESSION_COMPACTION_SUMMARY_LABEL = "[Session compaction summary]";
+const SESSION_COMPACTION_PROMPT = `You are compacting a long game-coaching chat session.
+Create a concise narrative summary that preserves actionable context for future coaching.
+
+Requirements:
+- Focus on player progression, goals, coaching strategy, major mistakes, major successes, and unresolved threads.
+- Include specific game state facts that still matter (items, areas, route decisions, constraints).
+- Include important tool/function-call outcomes when they changed decisions.
+- Avoid filler and avoid repeating low-value back-and-forth.
+- Write in plain text with short sections.
+
+Output format:
+1) Session narrative
+2) Current state snapshot
+3) Open loops / next best actions`;
+
 // API Key Retrieval
 async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
@@ -35,6 +55,9 @@ class LiveCoach extends HTMLElement {
     this._chat = null;
     this._instructions = "";
     this.history = [];
+    this.chatModel = CHAT_MODEL;
+    this.environmentConfig = null;
+    this.isCompactingGeminiHistory = false;
 
     // Specific game variables
     this.gameName = "";
@@ -192,6 +215,203 @@ class LiveCoach extends HTMLElement {
       response: { text: responseText },
       parts,
     };
+  }
+
+  getCompactionEntryPartText(part) {
+    if (!part || typeof part !== "object") {
+      return "";
+    }
+
+    if (typeof part.text === "string") {
+      return part.text;
+    }
+
+    if (part.functionCall) {
+      const callName = part.functionCall.name || "unknown";
+      const callArgs = part.functionCall.args ? JSON.stringify(part.functionCall.args) : "{}";
+      return `[functionCall] name=${callName}; args=${callArgs}`;
+    }
+
+    if (part.functionResponse) {
+      const responseName = part.functionResponse.name || "unknown";
+      const responsePayload = part.functionResponse.response
+        ? JSON.stringify(part.functionResponse.response)
+        : "{}";
+      return `[functionResponse] name=${responseName}; payload=${responsePayload}`;
+    }
+
+    if (part.inlineData) {
+      const mimeType = part.inlineData.mimeType || "unknown";
+      const byteLength = part.inlineData.data ? part.inlineData.data.length : 0;
+      return `[inlineData] mimeType=${mimeType}; bytes=${byteLength}`;
+    }
+
+    try {
+      return JSON.stringify(part);
+    } catch (_error) {
+      return "[unserializable part]";
+    }
+  }
+
+  formatGeminiHistoryForCompaction(historyChunk) {
+    return historyChunk
+      .map((entry, index) => {
+        const role = entry && entry.role ? entry.role : "unknown";
+        const parts = Array.isArray(entry && entry.parts) ? entry.parts : [];
+        const partText = parts
+          .map((part) => this.getCompactionEntryPartText(part))
+          .filter(Boolean)
+          .join("\n");
+
+        return `Message ${index + 1} | role=${role}\n${partText}`;
+      })
+      .join("\n\n");
+  }
+
+  getCompactionSummaryInjectionText(summaryText, sourceCount, totalCount) {
+    return `${SESSION_COMPACTION_SUMMARY_LABEL}\nCompacted ${sourceCount} of ${totalCount} Gemini history messages.\n\n${summaryText}`;
+  }
+
+  appendCompactionTranscriptEvent(eventName, details = {}) {
+    const compactDetails = Object.entries(details)
+      .map(([key, value]) => `${key}=${typeof value === "string" ? value : JSON.stringify(value)}`)
+      .join("; ");
+    const text = compactDetails
+      ? `[SessionCompaction] event=${eventName}; ${compactDetails}`
+      : `[SessionCompaction] event=${eventName}`;
+
+    this.history.push(this.buildTranscriptEntry("SystemEvent", text));
+  }
+
+  appendCompactionSummaryTranscript(summaryInjectionText) {
+    const text = `[SessionCompactionSummary]\n${summaryInjectionText}`;
+    this.history.push(this.buildTranscriptEntry("SystemEvent", text));
+  }
+
+  async getGeminiHistorySnapshot() {
+    if (!this._chat) {
+      return [];
+    }
+
+    if (typeof this._chat.getHistory === "function") {
+      const history = await this._chat.getHistory();
+      return Array.isArray(history) ? history : [];
+    }
+
+    if (Array.isArray(this._chat.history)) {
+      return this._chat.history;
+    }
+
+    return [];
+  }
+
+  async summarizeHistoryChunkWithSideGemini(historyChunk) {
+    const compactionPrompt = `${SESSION_COMPACTION_PROMPT}\n\nSession chunk to summarize:\n${this.formatGeminiHistoryForCompaction(historyChunk)}`;
+
+    const sideChat = await this._ai.chats.create({
+      model: this.chatModel,
+      config: { thinkingConfig: { thinkingLevel: "MINIMAL" } },
+    });
+
+    const summaryResponse = await sideChat.sendMessage({
+      message: compactionPrompt,
+    });
+
+    const summaryText = summaryResponse && typeof summaryResponse.text === "string"
+      ? summaryResponse.text.trim()
+      : "";
+
+    if (!summaryText) {
+      throw new Error("Compaction summary response was empty.");
+    }
+
+    return summaryText;
+  }
+
+  async maybeCompactGeminiSessionHistory() {
+    if (!this._chat) {
+      return;
+    }
+
+    if (!this._ai) {
+      return;
+    }
+
+    if (this.isCompactingGeminiHistory) {
+      return;
+    }
+
+    this.isCompactingGeminiHistory = true;
+    let startedCompactionWork = false;
+    try {
+      const currentHistory = await this.getGeminiHistorySnapshot();
+      if (!currentHistory.length || currentHistory.length <= SESSION_COMPACTION_MAX_MESSAGES) {
+        return;
+      }
+
+      const rawSourceCount = Math.floor(currentHistory.length * SESSION_COMPACTION_SOURCE_FRACTION);
+      const sourceCount = Math.max(1, Math.min(rawSourceCount, currentHistory.length));
+      const sourceChunk = currentHistory.slice(0, sourceCount);
+      const remainingChunk = currentHistory.slice(sourceCount);
+      this.appendCompactionTranscriptEvent("started", {
+        totalMessages: currentHistory.length,
+        sourceMessages: sourceChunk.length,
+        remainingMessages: remainingChunk.length,
+      });
+
+      if (this.pendingWorkCount === 0) {
+        this.beginSystemWork(SESSION_COMPACTION_STATUS_TEXT);
+        startedCompactionWork = true;
+      } else {
+        this.updateSystemWorkStatus(SESSION_COMPACTION_STATUS_TEXT);
+      }
+
+      const summaryText = await this.summarizeHistoryChunkWithSideGemini(sourceChunk);
+      const summaryInjection = this.getCompactionSummaryInjectionText(
+        summaryText,
+        sourceChunk.length,
+        currentHistory.length
+      );
+      this.appendCompactionSummaryTranscript(summaryInjection);
+
+      const compactedHistory = [
+        {
+          role: "user",
+          parts: [{ text: summaryInjection }],
+        },
+        ...remainingChunk,
+      ];
+
+      this._chat = await this._ai.chats.create({
+        model: this.chatModel,
+        config: this.environmentConfig,
+        history: compactedHistory,
+      });
+
+      this.appendCompactionTranscriptEvent("completed", {
+        oldMessageCount: currentHistory.length,
+        compactedMessageCount: compactedHistory.length,
+        sourceMessages: sourceChunk.length,
+      });
+
+      console.log("[LiveCoach][Compaction] completed", {
+        oldMessageCount: currentHistory.length,
+        sourceMessages: sourceChunk.length,
+        compactedMessageCount: compactedHistory.length,
+      });
+    } catch (error) {
+      const compactErrorMessage = error && error.message ? error.message : String(error);
+      this.appendCompactionTranscriptEvent("failed", {
+        errorMessage: compactErrorMessage,
+      });
+    } finally {
+      this.isCompactingGeminiHistory = false;
+      if (startedCompactionWork) {
+        this.endSystemWork();
+      } else {
+        this.updateSystemWorkStatus("System is thinking...");
+      }
+    }
   }
 
   getTranscriptTimestamp() {
@@ -580,7 +800,7 @@ class LiveCoach extends HTMLElement {
 
     this.render();
 
-    const environmentConfig = {
+    this.environmentConfig = {
       systemInstruction: this._instructions,
       thinkingConfig: { thinkingLevel: "MINIMAL" },
       tools: [{ functionDeclarations: this.ablationFunctions }]
@@ -591,8 +811,8 @@ class LiveCoach extends HTMLElement {
     this._ai = new GoogleGenAI({ apiKey: API_KEY });
     try {
       this._chat = await this._ai.chats.create({
-        model: "gemini-3-flash-preview",
-        config: environmentConfig,
+        model: this.chatModel,
+        config: this.environmentConfig,
       });
       this.geminiInit = true;
 
@@ -773,6 +993,7 @@ class LiveCoach extends HTMLElement {
 
       try {
         this.beginSystemWork("System is thinking...");
+        await this.maybeCompactGeminiSessionHistory();
         // return;
         let response = await this._chat.sendMessage({
           message: `from=${message.from.toLowerCase()}\n` + message.text,
