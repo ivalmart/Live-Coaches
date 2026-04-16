@@ -860,17 +860,19 @@ class LiveCoach extends HTMLElement {
           return "Error: " + (error && error.message ? error.message : error);
         }
       },
-      get_set_bits_from_packed_value({packed_value}) {
-        // RELIANT ON SNES EMULATOR ELEMENT
-        return document.querySelector('snes-emulator').get_set_bits_from_packed_value({packed_value});
-      },
       async get_route_to_goal({nodeName, itemList, goalNode}) {
         const resolvedStartNode = liveCoach.resolveDesignSpaceNodeName(nodeName);
         if (!resolvedStartNode) {
           return liveCoach.buildNodeValidationError(nodeName, "nodeName");
         }
 
-        const requestBody = { nodeName: resolvedStartNode, itemList: [] }; // HACK: using empty item list until we agree on the canonical ordering of items
+        // itemList is an array of item name strings (e.g. ["Morph", "Bombs"]).
+        // If the LLM didn't pass one, read current inventory from the emulator.
+        const items = Array.isArray(itemList) && itemList.length > 0
+          ? itemList
+          : (document.querySelector('snes-emulator').playerState?.inventory ?? []);
+
+        const requestBody = { nodeName: resolvedStartNode, itemList: items };
         if (goalNode) {
           const resolvedGoalNode = liveCoach.resolveDesignSpaceNodeName(goalNode);
           if (!resolvedGoalNode) {
@@ -893,6 +895,14 @@ class LiveCoach extends HTMLElement {
           data.path.remaining_path = `(${stepCount} more steps in the remaining path)`;
         }
         return data;
+      },
+      async get_all_nodes() {
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/nodes");
+        return await response.json();
+      },
+      async get_all_items() {
+        let response = await fetch("https://sm-route-server-435712896720.us-west1.run.app/items");
+        return await response.json();
       },
       async get_node_info({nodeName}) {
         const resolvedNodeName = liveCoach.resolveDesignSpaceNodeName(nodeName);

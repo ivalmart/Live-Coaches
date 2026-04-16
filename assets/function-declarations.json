@@ -56,23 +56,8 @@
     "included_ablation": ["liveness"]
   },
   {
-    "name": "get_set_bits_from_packed_value",
-    "description": "returns the indexes of the 1 bits in a packed integer value (e.g. 0b00001111 -> [0, 1, 2, 3])",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "packed_value": {
-          "type": "number",
-          "description": "an integer value to unpack"
-        }
-      },
-      "required": ["packed_value"]
-    },
-    "included_ablation": ["liveness", "coachness"]
-  },
-  {
     "name": "get_route_to_goal",
-    "description": "returns a full route from the player's current node to a goal node, including the next step and the complete path. Use this to help the player navigate to any destination in the game, not just the end. Returns success status, a message, the next node to visit, and the full path.",
+    "description": "returns a full route from the player's current node to a goal node, including the next step and the complete path. Use this to help the player navigate to any destination in the game, not just the end. Returns success status, a message, the next node to visit, and the full path. You MUST pass the player's current inventory from get_player_state as itemList: the route changes depending on what items and bosses the player has.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -83,17 +68,37 @@
         "itemList": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "description": "a list of items that the player currently has (e.g. [0, 2, 3])"
+            "type": "string",
+            "description": "item or progress flag name (e.g. 'Morph', 'Missiles', 'Kraid', 'Varia_Suit')"
           },
-          "description": "the items the player currently has"
+          "description": "the player's current inventory from get_player_state, including collected items and defeated bosses as name strings. Always pass this: the route depends on it."
         },
         "goalNode": {
           "type": "string",
           "description": "the name of the destination node to route to (e.g. 'Morph_Ball_Room_L1', 'Bomb_Torizo_Room_L1'). Defaults to 'Landing_Site_End' (beat the game) if not specified. Use this to route the player toward any specific item, boss, or area."
         }
       },
-      "required": ["nodeName", "itemList", "goalNode"]
+      "required": ["nodeName", "itemList"]
+    },
+    "included_ablation": ["coachness"]
+  },
+  {
+    "name": "get_all_nodes",
+    "description": "returns the complete list of valid node names in the game world. Call this at the start of a session or whenever you get an error about an invalid node name. Node names follow the pattern RoomName_DoorOrItem (e.g. 'Bomb_Torizo_Bombs', 'Kraid_Kraid', 'Landing_Site_L2'). Use the results to find the correct name for a location you want to route to.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "included_ablation": ["coachness"]
+  },
+  {
+    "name": "get_all_items",
+    "description": "returns the complete list of valid item and progress flag names accepted by the route server. Call this if you need to verify item name spelling or see what bosses/progress flags exist.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
     },
     "included_ablation": ["coachness"]
   },
