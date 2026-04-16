@@ -85,7 +85,7 @@ class LiveCoach extends HTMLElement {
 
     // Global activity indicator state (chat + fullscreen)
     this.pendingWorkCount = 0;
-    this.systemThinkingText = "System is thinking...";
+    this.systemThinkingText = "Thinking...";
 
     // Planner node validation helpers
     this.routeNodeNames = Object.keys(ALL_ROUTE_NODES);
@@ -409,7 +409,7 @@ class LiveCoach extends HTMLElement {
       if (startedCompactionWork) {
         this.endSystemWork();
       } else {
-        this.updateSystemWorkStatus("System is thinking...");
+        this.updateSystemWorkStatus("Thinking...");
       }
     }
   }
@@ -457,7 +457,7 @@ class LiveCoach extends HTMLElement {
     return result;
   }
 
-  beginSystemWork(statusText = "System is thinking...") {
+  beginSystemWork(statusText = "Thinking...") {
     this.pendingWorkCount += 1;
     this.systemThinkingText = statusText;
     this.updateSystemThinkingIndicator();
@@ -476,7 +476,7 @@ class LiveCoach extends HTMLElement {
   endSystemWork() {
     this.pendingWorkCount = Math.max(0, this.pendingWorkCount - 1);
     if (this.pendingWorkCount === 0) {
-      this.systemThinkingText = "System is thinking...";
+      this.systemThinkingText = "Thinking...";
     }
     this.updateSystemThinkingIndicator();
   }
@@ -1002,7 +1002,7 @@ class LiveCoach extends HTMLElement {
       this.displayMessage(message.from, message.text, this.querySelector("#message_display"));
 
       try {
-        this.beginSystemWork("System is thinking...");
+        this.beginSystemWork("Thinking...");
         await this.maybeCompactGeminiSessionHistory();
         // return;
         let response = await this._chat.sendMessage({
@@ -1053,7 +1053,7 @@ class LiveCoach extends HTMLElement {
             }
 
             if (functionResponseParts.length) {
-              this.updateSystemWorkStatus("System is thinking...");
+              this.updateSystemWorkStatus("Thinking...");
               response = await this._chat.sendMessage({
                 message: functionResponseParts,
               });
@@ -1158,7 +1158,7 @@ class LiveCoach extends HTMLElement {
       <div id="message_display"></div>
       <div id="system-thinking-indicator" class="system-thinking-indicator" role="status" aria-live="polite" aria-hidden="true" style="display:none;">
         <span class="thinking-dot" aria-hidden="true"></span>
-        <span class="thinking-text">System is thinking...</span>
+        <span class="thinking-text">Thinking...</span>
       </div>
       <div class="chat-input-row">
         <div class="chat-input-wrap" style="position:relative; display:inline-block; width:100%;">
