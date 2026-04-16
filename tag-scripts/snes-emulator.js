@@ -706,14 +706,16 @@ class SnesEmulator extends HTMLElement {
     );
   }
 
-  // Handling DataView for game memory reading and manipulation
+  // Handling DataView for game memory reading and manipulation.
+  // get_memory_data(2) = RETRO_MEMORY_SYSTEM_RAM = SNES WRAM (128KB).
+  // We read the full 128KB so we can access boss/event flags at $D820+.
   callDataView() {
     if (!this.emulator || !this.emulator.retro) {
       return;
     }
     try {
       let dv = new DataView(
-        this.emulator.retro.get_memory_data(2).slice(0, 0x2000).buffer
+        this.emulator.retro.get_memory_data(2).slice(0, 0x20000).buffer
       );
       return dv
     } catch (e) {
@@ -737,21 +739,152 @@ class SnesEmulator extends HTMLElement {
     return this.livenessEnvironments.has(currentEnvironment);
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // SNES WRAM-to-item-name mappings.
+  //
+  // Upstream source: sm_rando/abstraction_validation/abstractify.py
+  // (item_bits, beam_bits, boss_info, abstractify_boss_info).
+  // Hardware docs: Kejardon's RAMMap, PAR Codes (GameFAQs, guard_master).
+  //
+  // Names match what the route server accepts (GET /items on the route
+  // server). The route server translates these to sm_rando abbreviations
+  // internally (e.g. "Morph" -> "MB").
+  // ──────────────────────────────────────────────────────────────────
+
+  // $7E:09A4 (16-bit LE): collected equipment bitmask.
+  // Upstream: abstractify.py item_bits
+  static WRAM_09A4_BIT_TO_ITEM = {
+    0:  "Varia_Suit",     // 0x0001
+    1:  "Spring_Ball",    // 0x0002
+    2:  "Morph",          // 0x0004
+    3:  "Screw_Attack",   // 0x0008
+    // 4: unused
+    5:  "Gravity_Suit",   // 0x0020
+    // 6, 7: unused
+    8:  "Hi_Jump",        // 0x0100
+    9:  "Space_Jump",     // 0x0200
+    // 10, 11: unused
+    12: "Bombs",          // 0x1000
+    13: "Speed_Booster",  // 0x2000
+    14: "Grapple_Beam",   // 0x4000
+    15: "XRay",           // 0x8000
+  };
+
+  // $7E:09A8 (16-bit LE): collected beams bitmask.
+  // Upstream: abstractify.py beam_bits
+  // Note: Charge Beam is bit 12 (0x1000), not in the low byte.
+  static WRAM_09A8_BIT_TO_BEAM = {
+    0:  "Wave_Beam",      // 0x0001
+    1:  "Ice_Beam",       // 0x0002
+    2:  "Spazer",         // 0x0004
+    3:  "Plasma_Beam",    // 0x0008
+    12: "Charge_Beam",    // 0x1000
+  };
+
+  // $7E:D828..D82E: boss defeat bits, one byte per area.
+  // Indexed by area ID ($7E:079F). Bit 0 = area boss, bit 1 = miniboss,
+  // bit 2 = torizo.
+  // Upstream: abstractify.py boss_info dict
+  //
+  // Area 0 (Crateria/$D828): Bomb_Torizo at bit 2, but sm_rando doesn't
+  //   model it as a Boss node, so we skip it (route server ignores it).
+  // Area 6 (Ceres/$D82E): Ceres_Ridley at bit 0, also skipped.
+  static WRAM_BOSS_FLAGS = [
+    // [address, bit, name]
+    [0xD829, 0, "Kraid"],          // Brinstar boss
+    [0xD829, 1, "Spore_Spawn"],    // Brinstar miniboss
+    [0xD82A, 0, "Ridley"],         // Norfair boss
+    [0xD82A, 1, "Crocomire"],      // Norfair miniboss
+    [0xD82A, 2, "Golden_Torizo"],  // Norfair torizo
+    [0xD82B, 0, "Phantoon"],       // Wrecked Ship boss
+    [0xD82C, 0, "Draygon"],        // Maridia boss
+    [0xD82C, 1, "Botwoon"],        // Maridia miniboss
+    [0xD82D, 1, "Mother_Brain"],   // Tourian miniboss (yes, miniboss slot)
+  ];
+
+  // $7E:D821: event flags byte.
+  // Upstream: abstractify.py abstractify_boss_info, lines 72-75
+  static WRAM_EVENT_FLAGS = [
+    // [address, mask, name]
+    [0xD821, 0x04, "Statues"],   // bit 2: Golden Statues sunk (Tourian access)
+    [0xD821, 0x10, "Drain"],     // bit 4: Lower Norfair acid/lava lowered
+    [0xD821, 0x20, "Shaktool"],  // bit 5: Shaktool cleared sand path
+  ];
+
+  // Ammo addresses: max count stored as 16-bit LE.
+  // If max > 0, the player has that ammo type.
+  // Upstream: abstractify.py abstractify_items, lines 89-108
+  static WRAM_AMMO = [
+    // [address, name]
+    [0x09C8, "Missiles"],        // max missiles
+    [0x09CC, "Super_Missiles"],  // max supers
+    [0x09CE, "Power_Bombs"],     // max power bombs
+  ];
+
+  // Energy: max energy at $09C4 (16-bit LE). If > 99, player has an
+  // Energy Tank. Reserve Tanks at $09D4.
+  // Upstream: abstractify.py abstractify_items, lines 104-108
+
   retrievePlayerState() {
     if(this.romName == "SuperMetroid") {
       const dv = this.callDataView();
       const map_closestNode = document.querySelector('sm-map').player.closestNode;
-      // const smMapEl = document.querySelector('sm-map');
-      // const map_closestNode = smMapEl && smMapEl.player ? smMapEl.player.closestNode : null;
       return {
         energy: dv.getUint8(0x09C2),
         missiles: dv.getUint8(0x09C6),
-        inventory: this.get_set_bits_from_packed_value({ packed_value: dv.getUint16(0x09A4, true) }),
+        inventory: this.getFullInventory(dv),
         closestNode: map_closestNode,
-        gameTimeHours: dv.getUint16(0x09E0, true),   // $09E0: game time hours (0-99)
+        gameTimeHours: dv.getUint16(0x09E0, true),
         gameTimeMinutes: dv.getUint16(0x09DE, true),
       };
     }
+  }
+
+  /**
+   * Read all state flags the route server needs: equipment, beams,
+   * ammo-based items, boss defeats, and progress flags.
+   *
+   * Returns an array of name strings matching the route server's
+   * vocabulary (GET /items). This is the full state vector the BDD
+   * policy conditions on.
+   */
+  getFullInventory(dv) {
+    const names = [];
+
+    // Equipment bitmask: $09A4 (16-bit LE)
+    const equip = dv.getUint16(0x09A4, true);
+    for (const [bit, name] of Object.entries(this.constructor.WRAM_09A4_BIT_TO_ITEM)) {
+      if (equip & (1 << Number(bit))) names.push(name);
+    }
+
+    // Beam bitmask: $09A8 (16-bit LE)
+    const beams = dv.getUint16(0x09A8, true);
+    for (const [bit, name] of Object.entries(this.constructor.WRAM_09A8_BIT_TO_BEAM)) {
+      if (beams & (1 << Number(bit))) names.push(name);
+    }
+
+    // Ammo-based items: binary have/don't-have from max count > 0
+    for (const [addr, name] of this.constructor.WRAM_AMMO) {
+      if (dv.getUint16(addr, true) > 0) names.push(name);
+    }
+
+    // Energy Tank: max energy > 99 means at least one E-Tank
+    if (dv.getUint16(0x09C4, true) > 99) names.push("Energy_Tank");
+
+    // Reserve Tank: max reserve > 0
+    if (dv.getUint16(0x09D4, true) > 0) names.push("Reserve_Tank");
+
+    // Boss defeat flags: $D828..D82E, one byte per area
+    for (const [addr, bit, name] of this.constructor.WRAM_BOSS_FLAGS) {
+      if (dv.getUint8(addr) & (1 << bit)) names.push(name);
+    }
+
+    // Event/progress flags: $D821
+    for (const [addr, mask, name] of this.constructor.WRAM_EVENT_FLAGS) {
+      if (dv.getUint8(addr) & mask) names.push(name);
+    }
+
+    return names;
   }
   updatePlayerState() {
     const newState = this.retrievePlayerState();
@@ -803,15 +936,9 @@ class SnesEmulator extends HTMLElement {
     }
   }
 
-  get_set_bits_from_packed_value({packed_value}) {
-    const bits = [];
-    for (let i = 0; i < 16; i++) {
-      if (packed_value & (1 << i)) {
-        bits.push(i);
-      }
-    }
-    return bits;
-  }
+  // get_set_bits_from_packed_value removed: inventory is now returned as
+  // item/boss/progress name strings by getFullInventory(), not as bit
+  // indices. The route server accepts these names directly.
 
   // ----- HTML Structure of SNES-Emulator web component -----
   render() {
