@@ -79,7 +79,7 @@ class LiveCoach extends HTMLElement {
     this.isMicPriorityActive = false;
     this.pendingCoachSpeechMessage = null;
 
-    // Function call visibility toggle
+    // Function call + game message visibility toggle
     this.functionCallsVisible = localStorage.getItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE") !== "false";
     this.extraControlsVisible = localStorage.getItem("LIVE_COACH_EXTRA_CONTROLS_VISIBLE") !== "false";
 
@@ -709,7 +709,7 @@ class LiveCoach extends HTMLElement {
     if (!button) {
       return;
     }
-    button.textContent = this.functionCallsVisible ? "FC Show: ON" : "FC Show: OFF";
+    button.textContent = this.functionCallsVisible ? "Internal Msgs: ON" : "Internal Msgs: OFF";
     button.setAttribute("aria-pressed", this.functionCallsVisible ? "true" : "false");
   }
 
@@ -1088,6 +1088,7 @@ class LiveCoach extends HTMLElement {
 
       const messageElement = document.createElement("div");
       messageElement.className = "chat-message";
+      messageElement.dataset.sender = originalSender;
       // if (isFunctionCallMessage) {
       //   messageElement.classList.add("function-call-message");
       // }
@@ -1102,8 +1103,8 @@ class LiveCoach extends HTMLElement {
       chatElement.appendChild(messageElement);
       chatElement.scrollTop = chatElement.scrollHeight;
 
-      // Hides Game and FunctionCall messages from the front-end, but saves the history to keep for transcripting the actions gone within the playtest
-      if(sender === "Game") {
+      // Hide game-origin messages unless FC/Game visibility is enabled.
+      if(sender === "Game" && !this.functionCallsVisible) {
         messageElement.style.display = "none";
       }
 
@@ -1197,11 +1198,14 @@ class LiveCoach extends HTMLElement {
       localStorage.setItem("LIVE_COACH_FUNCTION_CALLS_VISIBLE", this.functionCallsVisible ? "true" : "false");
       this.updateFunctionCallsToggle(functionCallsToggleBtn);
       
-      // Update visibility of existing function call messages
+      // Update visibility of existing function-call and game-origin messages.
       const messageDisplay = this.querySelector("#message_display");
       messageDisplay.querySelectorAll(".chat-message").forEach(msg => {
-        const isFromFunctionCall = msg.innerHTML.includes("function-call-details");
-        if (isFromFunctionCall) {
+        const sender = msg.dataset.sender;
+        const isFromFunctionCall = msg.classList.contains("function-call-message");
+        const isGameMessage = sender === "Game";
+        const isFunctionCallResultMessage = sender === "FunctionCallResults";
+        if (isFromFunctionCall || isGameMessage || isFunctionCallResultMessage) {
           msg.style.display = this.functionCallsVisible ? "" : "none";
         }
       });
