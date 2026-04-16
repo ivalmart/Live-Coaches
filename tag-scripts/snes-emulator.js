@@ -829,7 +829,7 @@ class SnesEmulator extends HTMLElement {
     if(this.romName == "SuperMetroid") {
       const dv = this.callDataView();
       const map_closestNode = document.querySelector('sm-map').player.closestNode;
-      return {
+      const state = {
         energy: dv.getUint8(0x09C2),
         missiles: dv.getUint8(0x09C6),
         inventory: this.getFullInventory(dv),
@@ -837,6 +837,17 @@ class SnesEmulator extends HTMLElement {
         gameTimeHours: dv.getUint16(0x09E0, true),
         gameTimeMinutes: dv.getUint16(0x09DE, true),
       };
+
+      // Detect collected-but-unequipped items.
+      // $09A2/$09A6 = currently equipped; $09A4/$09A8 = collected.
+      // Same bit layouts. Only equipment and beams can be toggled;
+      // ammo, bosses, and progress flags have no equipped/unequipped state.
+      const unequipped = this.getUnequippedItems(dv);
+      if (unequipped.length > 0) {
+        state.unequipped = unequipped;
+      }
+
+      return state;
     }
   }
 
@@ -886,6 +897,38 @@ class SnesEmulator extends HTMLElement {
 
     return names;
   }
+
+  /**
+   * Compare equipped ($09A2/$09A6) vs collected ($09A4/$09A8) bitmasks
+   * and return names of items the player has collected but not equipped.
+   *
+   * Only equipment and beams can be toggled in the menu. Ammo, bosses,
+   * and progress flags don't have an equipped/unequipped distinction.
+   *
+   * WRAM layout (same bit positions, different addresses):
+   *   $09A2 = equipped items,  $09A4 = collected items
+   *   $09A6 = equipped beams,  $09A8 = collected beams
+   */
+  getUnequippedItems(dv) {
+    const unequipped = [];
+
+    const collected = dv.getUint16(0x09A4, true);
+    const equipped  = dv.getUint16(0x09A2, true);
+    const disabledEquip = collected & ~equipped;
+    for (const [bit, name] of Object.entries(this.constructor.WRAM_09A4_BIT_TO_ITEM)) {
+      if (disabledEquip & (1 << Number(bit))) unequipped.push(name);
+    }
+
+    const collectedBeams = dv.getUint16(0x09A8, true);
+    const equippedBeams  = dv.getUint16(0x09A6, true);
+    const disabledBeams = collectedBeams & ~equippedBeams;
+    for (const [bit, name] of Object.entries(this.constructor.WRAM_09A8_BIT_TO_BEAM)) {
+      if (disabledBeams & (1 << Number(bit))) unequipped.push(name);
+    }
+
+    return unequipped;
+  }
+
   updatePlayerState() {
     const newState = this.retrievePlayerState();
     if (!newState) {
