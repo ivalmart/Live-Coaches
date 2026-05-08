@@ -12,18 +12,18 @@
     />
   </head>
   <body>
-    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="style.css" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
     <!-- Imported Custom Tag Scripts -->
-    <script type="module" src="../tag-scripts/snes-emulator.js"></script>
-    <script type="module" src="../tag-scripts/controller-mapping.js"></script>
-    <script type="module" src="../tag-scripts/live-coach.js"></script>
-    <script type="module" src="../tag-scripts/sm-map.js"></script>
-    <script type="module" src="../tag-scripts/coach-whiteboard.js"></script>
+    <script type="module" src="tag-scripts/snes-emulator.js"></script>
+    <script type="module" src="tag-scripts/controller-mapping.js"></script>
+    <script type="module" src="tag-scripts/live-coach.js"></script>
+    <script type="module" src="tag-scripts/sm-map.js"></script>
+    <script type="module" src="tag-scripts/coach-whiteboard.js"></script>
 
     <main>
       <!-- Ablation Study Hyperlinks -->
@@ -37,9 +37,9 @@
       <div class="main-layout">
         <div class="left-panel">
           <snes-emulator
-            rom-url="../assets/ROMS/Super Metroid.sfc"
+            rom-url="assets/ROMS/Super Metroid.sfc"
             rom-name="SuperMetroid"
-            state-url="../assets/sm_save_states/sm_ship.state">
+            state-url="assets/sm_save_states/sm_ship.state">
           </snes-emulator>
           <controller-mapping style="display: none;"></controller-mapping>
           <sm-map style="display: block;"></sm-map>

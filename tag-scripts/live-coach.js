@@ -24,22 +24,30 @@ Output format:
 3) Open loops / next best actions`;
 
 // API Key Retrieval
+// API Key Retrieval
 async function getApiKey() {
   let apiKey = localStorage.getItem("GEMINI_API_KEY");
-  
-  if (!apiKey) {
-    let txt_apiKey = await fetch("../api_key.txt");
 
-    if (!txt_apiKey) {
+  if (!apiKey) {
+    try {
+      const response_apiKey = await fetch("../api_key.txt");
+      if (response_apiKey.ok) {
+        apiKey = (await response_apiKey.text()).trim();
+      }
+    } catch (_error) {
+      apiKey = null;
+    }
+
+    if (!apiKey) {
       apiKey = prompt("Please enter your Gemini API key:");
-    } else {
-      apiKey = await txt_apiKey.text();
+      apiKey = apiKey ? apiKey.trim() : apiKey;
     }
 
     if (apiKey) {
       localStorage.setItem("GEMINI_API_KEY", apiKey);
     }
   }
+
   return apiKey;
 }
 
