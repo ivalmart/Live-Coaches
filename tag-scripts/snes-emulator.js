@@ -30,6 +30,8 @@ class SnesEmulator extends HTMLElement {
 
     this.playerState = {}; // current player state information (note: might curently only focus on Super Metroid)
     this.lastCoachPushGameMinute = null; // absolute in-game minute when the last coach update was sent
+    this.lastEnergyMissileOnlyPushMs = null; // wall-clock timestamp of the last energy/missiles-only coach update
+    this.ENERGY_MISSILE_ONLY_PUSH_COOLDOWN_MS = 5000;
     this.livenessEnvironments = new Set(["Live-Coach", "Liveness-Only"]);
     this.SAVE_SLOTS = new Array(10); // 10 save slots by default, will preload 4-9
     this._captionTimers = new Map();
@@ -733,6 +735,11 @@ class SnesEmulator extends HTMLElement {
     return rest;
   }
 
+  getComparablePlayerStateWithoutVitals(playerState = {}) {
+    const { energy, missiles, ...rest } = this.getComparablePlayerState(playerState);
+    return rest;
+  }
+
   isCurrentEnvironmentLivenessEnabled() {
     const urlParams = new URLSearchParams(window.location.search);
     const currentEnvironment = urlParams.get('Env');
@@ -957,6 +964,13 @@ class SnesEmulator extends HTMLElement {
     const comparableNew = this.getComparablePlayerState(newState);
     const comparablePrevious = this.getComparablePlayerState(previousState);
     const hasNonTimeStateChange = JSON.stringify(comparableNew) !== JSON.stringify(comparablePrevious);
+    const vitalsOnlyComparableNew = this.getComparablePlayerStateWithoutVitals(newState);
+    const vitalsOnlyComparablePrevious = this.getComparablePlayerStateWithoutVitals(previousState);
+    const hasNonVitalStateChange = JSON.stringify(vitalsOnlyComparableNew) !== JSON.stringify(vitalsOnlyComparablePrevious);
+    const hasEnergyOrMissileChange =
+      Number(newState.energy) !== Number(previousState.energy) ||
+      Number(newState.missiles) !== Number(previousState.missiles);
+    const hasOnlyEnergyMissileChange = hasEnergyOrMissileChange && !hasNonVitalStateChange;
 
     const currentAbsoluteMinute = this.getAbsoluteGameMinute(
       newState.gameTimeHours,
@@ -973,9 +987,23 @@ class SnesEmulator extends HTMLElement {
       : currentAbsoluteMinute - this.lastCoachPushGameMinute;
     const reachedInactivityThreshold = elapsedSinceLastCoachPush >= 2; // 2 minute timer
 
-    if (hasNonTimeStateChange || reachedInactivityThreshold) {
+    const nowMs = Date.now();
+    const elapsedSinceLastEnergyMissileOnlyPush = this.lastEnergyMissileOnlyPushMs === null
+      ? Number.POSITIVE_INFINITY
+      : nowMs - this.lastEnergyMissileOnlyPushMs;
+    const reachedEnergyMissileOnlyCooldown =
+      elapsedSinceLastEnergyMissileOnlyPush >= this.ENERGY_MISSILE_ONLY_PUSH_COOLDOWN_MS;
+
+    const shouldSendUpdate = hasOnlyEnergyMissileChange
+      ? reachedEnergyMissileOnlyCooldown || reachedInactivityThreshold
+      : hasNonTimeStateChange || reachedInactivityThreshold;
+
+    if (shouldSendUpdate) {
       liveCoach.sendChatMessage({ to: "Coach", from: "Game", text: JSON.stringify(this.playerState) });
       this.lastCoachPushGameMinute = currentAbsoluteMinute;
+      if (hasOnlyEnergyMissileChange) {
+        this.lastEnergyMissileOnlyPushMs = nowMs;
+      }
     }
   }
 
